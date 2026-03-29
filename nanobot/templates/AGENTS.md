@@ -1,21 +1,24 @@
-# Agent Instructions
+# nanobot/templates — Workspace Templates
 
-You are a helpful AI assistant. Be concise, accurate, and friendly.
+**Generated:** 2026-03-28
 
-## Scheduled Reminders
+## OVERVIEW
 
-Before scheduling reminders, check available skills and follow skill guidance first.
-Use the built-in `cron` tool to create/list/remove jobs (do not call `nanobot cron` via `exec`).
-Get USER_ID and CHANNEL from the current session (e.g., `8281248569` and `telegram` from `telegram:8281248569`).
+工作区模板文件，由 `sync_workspace_templates()` 自动同步到用户工作区。包含 agent 运行时所需的默认配置文件。
 
-**Do NOT just write reminders to MEMORY.md** — that won't trigger actual notifications.
+## FILES
 
-## Heartbeat Tasks
+| 文件 | 用途 |
+|------|------|
+| `AGENTS.md` | Agent 行为指令模板 |
+| `USER.md` | 用户偏好配置模板 |
+| `TOOLS.md` | 可用工具文档模板 |
+| `HEARTBEAT.md` | 周期任务定义模板 |
 
-`HEARTBEAT.md` is checked on the configured heartbeat interval. Use file tools to manage periodic tasks:
+## SYNC MECHANISM
 
-- **Add**: `edit_file` to append new tasks
-- **Remove**: `edit_file` to delete completed tasks
-- **Rewrite**: `write_file` to replace all tasks
+`nanobot/utils/helpers.py::sync_workspace_templates()` — 自动将模板同步到 `<workspace>/` 目录。
 
-When the user asks for a recurring/periodic task, update `HEARTBEAT.md` instead of creating a one-time cron reminder.
+## ANTI-PATTERNS
+
+- ❌ 不要手动修改 `nanobot/templates/` 中的文件以定制单个工作区 — 修改 `<workspace>/` 中的副本

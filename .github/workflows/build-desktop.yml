@@ -1,0 +1,117 @@
+name: Build Desktop
+
+on:
+  push:
+    branches: [main, nightly]
+    tags: ['v*']
+  pull_request:
+    branches: [main, nightly]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  RUST_VERSION: 'stable'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            sidecar_name: nanobot-sidecar-x86_64-pc-windows-msvc.exe
+          # - os: macos-latest
+          #   sidecar_name: nanobot-sidecar-aarch64-apple-darwin
+          # - os: ubuntu-latest
+          #   sidecar_name: nanobot-sidecar-x86_64-unknown-linux-gnu
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: desktop/pnpm-lock.yaml
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Install Python dependencies for sidecar
+        run: |
+          pip install pyinstaller
+
+      - name: Build sidecar executable
+        shell: pwsh
+        run: |
+          $sidecarName = "${{ matrix.sidecar_name }}"
+          pnpm --dir . exec pyinstaller nanobot-sidecar.spec --noconfirm
+          $distPath = "dist\nanobot-sidecar.exe"
+          if (Test-Path $distPath) {
+            Copy-Item -Path $distPath -Destination "desktop\src-tauri\binaries\$sidecarName" -Force
+            Write-Host "Sidecar built and copied to desktop\src-tauri\binaries\$sidecarName"
+          } else {
+            throw "Sidecar build failed - executable not found at $distPath"
+          }
+
+      - name: Install frontend dependencies
+        working-directory: desktop
+        run: pnpm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --target ${{ matrix.os == 'windows-latest' && 'x86_64-pc-windows-msvc' || matrix.os == 'macos-latest' && 'aarch64-apple-darwin' || 'x86_64-unknown-linux-gnu' }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nanobot-desktop-${{ matrix.os }}-artifacts
+          path: |
+            desktop/src-tauri/target/*/release/bundle/*
+            desktop/src-tauri/binaries/*
+          retention-days: 7
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,25 +1,68 @@
-.worktrees/
-.assets
-.docs
-.env
+# Python
 *.pyc
-dist/
-build/
-*.egg-info/
-*.egg
-*.pycs
 *.pyo
 *.pyd
 *.pyw
 *.pyz
 *.pywz
 *.pyzz
+*.pycs
+__pycache__/
+*.egg-info/
+*.egg
 .venv/
 venv/
-__pycache__/
+.env
 poetry.lock
-.pytest_cache/
-botpy.log
-nano.*.save
-.DS_Store
 uv.lock
+
+# Build outputs
+dist/
+build/
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+playwright-report/
+test-results/
+
+# Logs
+*.log
+botpy.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+.worktrees/
+.assets
+.docs
+nano.*.save
+
+# AI agent working directories
+.sisyphus/
+
+# Desktop app (Tauri)
+desktop/node_modules/
+desktop/.svelte-kit/
+desktop/build/
+desktop/package-lock.json
+desktop/pnpm-lock.yaml
+
+# Tauri build outputs
+desktop/src-tauri/target/
+
+# Sidecar binaries (too large for git)
+desktop/binaries/*.exe
+desktop/binaries/*-debug
+desktop/src-tauri/binaries/*.exe
+
+# E2E test reports
+desktop/playwright-report/

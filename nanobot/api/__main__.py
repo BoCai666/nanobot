@@ -1,0 +1,21 @@
+"""nanobot.api.__main__ - Sidecar entry point for PyInstaller packaging.
+
+This module serves as the entry point when running the nanobot API server
+as a standalone executable (sidecar) for Tauri desktop integration.
+
+Usage:
+    python -m nanobot.api [OPTIONS]
+
+Options:
+    --host TEXT     Host to bind to [default: 127.0.0.1]
+    --port INTEGER  Port to bind to [default: 8008]
+    --help          Show this message and exit.
+
+Example:
+    python -m nanobot.api --host 127.0.0.1 --port 8008
+"""
+
+from nanobot.api.server import main
+
+if __name__ == "__main__":
+    main()
