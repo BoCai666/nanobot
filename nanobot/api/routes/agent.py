@@ -79,17 +79,24 @@ async def _stream_chat(
         session_id: Optional session identifier.
 
     Yields:
-        SSE-formatted response chunks.
+        SSE-formatted response chunks:
+        - "data: ..." for regular content
+        - "thinking: ..." for thinking content
     """
     session_key = session_id or "api:direct"
 
-    # Queue for collecting stream deltas
-    stream_queue: asyncio.Queue[str] = asyncio.Queue()
+    # Unified queue for all events: (event_type, content)
+    # event_type: "data", "thinking", or "control"
+    event_queue: asyncio.Queue[tuple[str, str]] = asyncio.Queue()
     done_event = asyncio.Event()
 
     async def on_stream(delta: str) -> None:
-        """Callback to collect streaming deltas."""
-        await stream_queue.put(delta)
+        """Callback to collect streaming content deltas."""
+        await event_queue.put(("data", delta))
+
+    async def on_thinking(delta: str) -> None:
+        """Callback to collect thinking content deltas."""
+        await event_queue.put(("thinking", delta))
 
     async def on_stream_end(*, resuming: bool = False) -> None:
         """Callback when streaming ends.
@@ -99,7 +106,7 @@ async def _stream_chat(
                       If False, this is the final response and stream should end.
         """
         if not resuming:
-            await stream_queue.put("[DONE]")
+            await event_queue.put(("control", "[DONE]"))
             done_event.set()
 
     async def process_task():
@@ -108,7 +115,7 @@ async def _stream_chat(
             # Access the internal agent instance for direct processing
             agent = agent_service.agent
             if agent is None:
-                await stream_queue.put("[ERROR: Agent not initialized]")
+                await event_queue.put(("control", "[ERROR: Agent not initialized]"))
                 done_event.set()
                 return
 
@@ -119,17 +126,18 @@ async def _stream_chat(
                 chat_id="direct",
                 on_stream=on_stream,
                 on_stream_end=on_stream_end,
+                on_thinking=on_thinking,
             )
             # Note: result.content is already sent via on_stream callback during streaming.
             # We only need to handle the case where streaming didn't happen (no on_stream_end called).
             # The on_stream_end callback already sends [DONE] when resuming=False.
             done_event.set()
         except asyncio.CancelledError:
-            await stream_queue.put("[ABORTED]")
+            await event_queue.put(("control", "[ABORTED]"))
             done_event.set()
             raise
         except Exception as e:
-            await stream_queue.put(f"[ERROR: {str(e)}]")
+            await event_queue.put(("control", f"[ERROR: {str(e)}]"))
             done_event.set()
 
     # Start processing task
@@ -140,20 +148,24 @@ async def _stream_chat(
         while not done_event.is_set():
             try:
                 # Wait for next item with timeout to allow checking abort
-                delta = await asyncio.wait_for(stream_queue.get(), timeout=0.5)
+                event_type, content = await asyncio.wait_for(event_queue.get(), timeout=0.5)
 
-                if delta == "[DONE]":
-                    yield "data: [DONE]\n\n"
-                    break
-                elif delta == "[ABORTED]":
-                    yield "data: [ABORTED]\n\n"
-                    break
-                elif delta.startswith("[ERROR"):
-                    yield f"data: {delta}\n\n"
-                    break
+                if event_type == "control":
+                    if content == "[DONE]":
+                        yield "data: [DONE]\n\n"
+                        break
+                    elif content == "[ABORTED]":
+                        yield "data: [ABORTED]\n\n"
+                        break
+                    elif content.startswith("[ERROR"):
+                        yield f"data: {content}\n\n"
+                        break
+                elif event_type == "thinking":
+                    # Thinking content - use "thinking:" event type
+                    yield f"thinking: {content}\n\n"
                 else:
-                    # Format as SSE
-                    yield f"data: {delta}\n\n"
+                    # Regular content - use "data:" event type
+                    yield f"data: {content}\n\n"
 
             except asyncio.TimeoutError:
                 # Check if task was cancelled externally
@@ -163,10 +175,12 @@ async def _stream_chat(
                 continue
 
         # Drain any remaining items
-        while not stream_queue.empty():
-            delta = await stream_queue.get()
-            if delta not in ("[DONE]", "[ABORTED]") and not delta.startswith("[ERROR"):
-                yield f"data: {delta}\n\n"
+        while not event_queue.empty():
+            event_type, content = await event_queue.get()
+            if event_type == "thinking":
+                yield f"thinking: {content}\n\n"
+            elif event_type == "data":
+                yield f"data: {content}\n\n"
 
     finally:
         if not task.done():

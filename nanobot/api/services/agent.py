@@ -68,6 +68,7 @@ class AgentService:
             mcp_servers=self._config.tools.mcp_servers,
             channels_config=self._config.channels,
             timezone=self._config.agents.defaults.timezone,
+            reasoning_effort=self._config.agents.defaults.reasoning_effort,
         )
 
         self._start_time = datetime.now()
