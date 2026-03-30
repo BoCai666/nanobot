@@ -36,6 +36,15 @@ class AgentHook:
     async def on_stream(self, context: AgentHookContext, delta: str) -> None:
         pass
 
+    async def on_thinking(self, context: AgentHookContext, thinking: str) -> None:
+        """Called when thinking content is streamed.
+
+        Args:
+            context: The current agent hook context.
+            thinking: The thinking content delta (without think tags).
+        """
+        pass
+
     async def on_stream_end(self, context: AgentHookContext, *, resuming: bool) -> None:
         pass
 

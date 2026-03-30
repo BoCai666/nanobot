@@ -81,15 +81,23 @@ class AgentRunner:
                 kwargs["reasoning_effort"] = spec.reasoning_effort
 
             if hook.wants_streaming():
+
                 async def _stream(delta: str) -> None:
                     await hook.on_stream(context, delta)
+
+                async def _reasoning(delta: str) -> None:
+                    await hook.on_thinking(context, delta)
 
                 response = await self.provider.chat_stream_with_retry(
                     **kwargs,
                     on_content_delta=_stream,
+                    on_reasoning_delta=_reasoning,
                 )
             else:
                 response = await self.provider.chat_with_retry(**kwargs)
+                # For non-streaming mode, send reasoning_content via hook if present
+                if response.reasoning_content:
+                    await hook.on_thinking(context, response.reasoning_content)
 
             raw_usage = response.usage or {}
             usage = {
@@ -104,17 +112,21 @@ class AgentRunner:
                 if hook.wants_streaming():
                     await hook.on_stream_end(context, resuming=True)
 
-                messages.append(build_assistant_message(
-                    response.content or "",
-                    tool_calls=[tc.to_openai_tool_call() for tc in response.tool_calls],
-                    reasoning_content=response.reasoning_content,
-                    thinking_blocks=response.thinking_blocks,
-                ))
+                messages.append(
+                    build_assistant_message(
+                        response.content or "",
+                        tool_calls=[tc.to_openai_tool_call() for tc in response.tool_calls],
+                        reasoning_content=response.reasoning_content,
+                        thinking_blocks=response.thinking_blocks,
+                    )
+                )
                 tools_used.extend(tc.name for tc in response.tool_calls)
 
                 await hook.before_execute_tools(context)
 
-                results, new_events, fatal_error = await self._execute_tools(spec, response.tool_calls)
+                results, new_events, fatal_error = await self._execute_tools(
+                    spec, response.tool_calls
+                )
                 tool_events.extend(new_events)
                 context.tool_results = list(results)
                 context.tool_events = list(new_events)
@@ -126,12 +138,14 @@ class AgentRunner:
                     await hook.after_iteration(context)
                     break
                 for tool_call, result in zip(response.tool_calls, results):
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "name": tool_call.name,
-                        "content": result,
-                    })
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": tool_call.name,
+                            "content": result,
+                        }
+                    )
                 await hook.after_iteration(context)
                 continue
 
@@ -149,11 +163,13 @@ class AgentRunner:
                 await hook.after_iteration(context)
                 break
 
-            messages.append(build_assistant_message(
-                clean,
-                reasoning_content=response.reasoning_content,
-                thinking_blocks=response.thinking_blocks,
-            ))
+            messages.append(
+                build_assistant_message(
+                    clean,
+                    reasoning_content=response.reasoning_content,
+                    thinking_blocks=response.thinking_blocks,
+                )
+            )
             final_content = clean
             context.final_content = final_content
             context.stop_reason = stop_reason
@@ -180,15 +196,11 @@ class AgentRunner:
         tool_calls: list[ToolCallRequest],
     ) -> tuple[list[Any], list[dict[str, str]], BaseException | None]:
         if spec.concurrent_tools:
-            tool_results = await asyncio.gather(*(
-                self._run_tool(spec, tool_call)
-                for tool_call in tool_calls
-            ))
+            tool_results = await asyncio.gather(
+                *(self._run_tool(spec, tool_call) for tool_call in tool_calls)
+            )
         else:
-            tool_results = [
-                await self._run_tool(spec, tool_call)
-                for tool_call in tool_calls
-            ]
+            tool_results = [await self._run_tool(spec, tool_call) for tool_call in tool_calls]
 
         results: list[Any] = []
         events: list[dict[str, str]] = []
@@ -225,8 +237,14 @@ class AgentRunner:
             detail = "(empty)"
         elif len(detail) > 120:
             detail = detail[:120] + "..."
-        return result, {
-            "name": tool_call.name,
-            "status": "error" if isinstance(result, str) and result.startswith("Error") else "ok",
-            "detail": detail,
-        }, None
+        return (
+            result,
+            {
+                "name": tool_call.name,
+                "status": "error"
+                if isinstance(result, str) and result.startswith("Error")
+                else "ok",
+                "detail": detail,
+            },
+            None,
+        )

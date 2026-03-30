@@ -12,10 +12,130 @@ import tiktoken
 
 
 def strip_think(text: str) -> str:
-    """Remove <think>…</think> blocks and any unclosed trailing <think> tag."""
-    text = re.sub(r"<think>[\s\S]*?</think>", "", text)
-    text = re.sub(r"<think>[\s\S]*$", "", text)
+    """Remove <tool_call>…\`\`\` blocks and any unclosed trailing <arg_key> tag."""
+    text = re.sub(r"<tool_call>[\s\S]*?\`\`\`", "", text)
+    text = re.sub(r"<arg_key>[\s\S]*$", "", text)
     return text.strip()
+
+
+class ThinkingStreamParser:
+    """Incremental parser for streaming thinking content.
+
+    Handles partial think tags that may arrive across multiple delta chunks.
+    Emits both thinking content (inside ฀...``` blocks) and regular content.
+
+    Usage:
+        parser = ThinkingStreamParser()
+        for delta in stream:
+            thinking_delta, content_delta = parser.parse(delta)
+            if thinking_delta:
+                await on_thinking(thinking_delta)
+            if content_delta:
+                await on_stream(content_delta)
+    """
+
+    # Think tag patterns
+    THINK_OPEN = """"  # Opening tag
+    THINK_CLOSE = "```"  # Closing tag
+
+    def __init__(self) -> None:
+        self._buf = ""  # Raw buffer
+        self._in_think = False  # Currently inside a think block
+        self._think_content = ""  # Accumulated thinking content
+        self._content = ""  # Accumulated regular content
+
+    def parse(self, delta: str) -> tuple[str, str]:
+        """Parse a delta chunk and return (thinking_delta, content_delta).
+
+        Args:
+            delta: New text chunk from stream.
+
+        Returns:
+            Tuple of (thinking_increment, content_increment) to emit.
+        """
+        self._buf += delta
+        thinking_out = ""
+        content_out = ""
+
+        while True:
+            if self._in_think:
+                # Look for closing ```
+                close_pos = self._buf.find(self.THINK_CLOSE)
+                if close_pos == -1:
+                    # Not found - check for partial close tag
+                    partial_pos = self._find_partial_tag(self._buf, self.THINK_CLOSE)
+                    if partial_pos > 0:
+                        # Emit everything before partial, keep partial in buffer
+                        thinking_out += self._buf[:partial_pos]
+                        self._think_content += self._buf[:partial_pos]
+                        self._buf = self._buf[partial_pos:]
+                        break
+                    else:
+                        # No partial close - emit all as thinking
+                        thinking_out += self._buf
+                        self._think_content += self._buf
+                        self._buf = ""
+                        break
+                else:
+                    # Found closing ``` - emit thinking content before it
+                    thinking_out += self._buf[:close_pos]
+                    self._think_content += self._buf[:close_pos]
+                    self._buf = self._buf[close_pos + len(self.THINK_CLOSE):]
+                    self._in_think = False
+            else:
+                # Look for opening  21                    open_pos = self._buf.find(self.THINK_OPEN)
+                    if open_pos == -1:
+                        # Not found - check for partial open tag
+                        partial_pos = self._find_partial_tag(self._buf, self.THINK_OPEN)
+                        if partial_pos > 0:
+                            # Emit everything before partial, keep partial in buffer
+                            content_out += self._buf[:partial_pos]
+                            self._content += self._buf[:partial_pos]
+                            self._buf = self._buf[partial_pos:]
+                            break
+                        else:
+                            # No partial open - emit all as content
+                            content_out += self._buf
+                            self._content += self._buf
+                            self._buf = ""
+                            break
+                    else:
+                        # Found opening  - emit content before it
+                        content_out += self._buf[:open_pos]
+                        self._content += self._buf[:open_pos]
+                        self._buf = self._buf[open_pos + len(self.THINK_OPEN):]
+                        self._in_think = True
+
+        return thinking_out, content_out
+
+    def _find_partial_tag(self, buf: str, tag: str) -> int:
+        """Find position where a partial tag might start.
+
+        Returns the position where we should stop emitting and wait for more data,
+        or -1 if no partial tag is detected.
+        """
+        # Check if buffer ends with any prefix of the tag (length 1 to len-1)
+        for i in range(1, len(tag)):
+            if buf.endswith(tag[:i]):
+                return len(buf) - i
+        return -1
+
+    def reset(self) -> None:
+        """Reset parser state."""
+        self._buf = ""
+        self._in_think = False
+        self._think_content = ""
+        self._content = ""
+
+    @property
+    def in_think(self) -> bool:
+        """Whether currently inside a think block."""
+        return self._in_think
+
+    @property
+    def pending_buffer(self) -> str:
+        """Get current pending buffer content."""
+        return self._buf
 
 
 def detect_image_mime(data: bytes) -> str | None:
