@@ -49,6 +49,9 @@ nano.*.save
 # AI agent working directories
 .sisyphus/
 
+# Test artifacts
+MagicMock/
+
 # Desktop app (Tauri)
 desktop/node_modules/
 desktop/.svelte-kit/

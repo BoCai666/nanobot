@@ -2,10 +2,7 @@ name: Build Desktop
 
 on:
   push:
-    branches: [main, nightly]
     tags: ['v*']
-  pull_request:
-    branches: [main, nightly]
 
 env:
   PYTHON_VERSION: '3.11'
