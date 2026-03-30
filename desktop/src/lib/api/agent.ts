@@ -43,6 +43,7 @@ export interface GatewayStatus {
 // SSE 回调
 export interface StreamCallbacks {
 	onDelta: (delta: string) => void;
+	onThinking?: (thinking: string) => void;  // 新增：思考过程回调
 	onDone: () => void;
 	onError: (error: string) => void;
 	onAbort: () => void;
@@ -294,6 +295,7 @@ export class AgentAPI {
 				buffer = lines.pop() || ''; // 保留最后一个不完整的行
 
 				for (const line of lines) {
+					// 处理数据事件（普通内容）
 					if (line.startsWith('data: ')) {
 						const data = line.slice(6).trim();
 
@@ -314,6 +316,15 @@ export class AgentAPI {
 
 						// 发送文本增量
 						callbacks.onDelta(data);
+					}
+
+					// 处理思考过程事件
+					if (line.startsWith('thinking: ')) {
+						const thinking = line.slice(10).trim();
+						// 调用 onThinking 回调（如果提供）
+						if (callbacks.onThinking) {
+							callbacks.onThinking(thinking);
+						}
 					}
 				}
 			}

@@ -147,14 +147,28 @@
 	 * 结束流式响应
 	 */
 	export function finishStreamingResponse(messageId: string) {
-		updateMessageStatus(messageId, "sent");
+		updateMessageStatus(messageId, 'sent');
+	}
+
+	/**
+	 * 追加思考过程内容
+	 */
+	export function appendStreamingThinking(messageId: string, thinking: string) {
+		const message = localMessages.find((msg) => msg.id === messageId);
+		if (message) {
+			localMessages = localMessages.map((msg) =>
+				msg.id === messageId
+					? { ...msg, thinking: (msg.thinking || '') + thinking }
+					: msg
+			);
+		}
 	}
 
 	/**
 	 * 清空流式响应内容（用于替换初始提示）
 	 */
 	export function clearStreamingContent(messageId: string) {
-		updateMessageContent(messageId, "");
+		updateMessageContent(messageId, '');
 	}
 
 	/**

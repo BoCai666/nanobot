@@ -17,6 +17,7 @@
 	import MarkdownRenderer from "./MarkdownRenderer.svelte";
 	import Skeleton from "./Skeleton.svelte";
 	import Avatar from "./Avatar.svelte";
+	import ThinkingBlock from "./ThinkingBlock.svelte";
 	import { cn } from "$lib/utils/cn";
 
 	// Props
@@ -202,7 +203,10 @@
 							<!-- 用户和系统消息显示纯文本 -->
 							<p class="whitespace-pre-wrap">{message.content}</p>
 						{:else}
-							<!-- AI 消息使用 Markdown 渲染 -->
+							<!-- AI 消息：先显示思考过程（如果有），再显示内容 -->
+							{#if message.thinking}
+								<ThinkingBlock thinking={message.thinking} />
+							{/if}
 							<MarkdownRenderer 
 								content={message.content} 
 								streaming={message.status === "sending"}

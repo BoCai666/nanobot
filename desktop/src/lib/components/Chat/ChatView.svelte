@@ -68,6 +68,10 @@
 				stream: true,
 			},
 			{
+				onThinking: async (thinking: string) => {
+					// 收到思考过程内容
+					chatContainerRef?.appendStreamingThinking(aiMessageId, thinking);
+				},
 				onDelta: async (delta: string) => {
 					// 第一次收到内容时，清除思考提示
 					if (!receivedContent) {

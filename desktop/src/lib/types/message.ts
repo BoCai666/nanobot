@@ -34,4 +34,6 @@ export interface Message {
   timestamp: Date | string;
   /** 消息状态 */
   status: MessageStatus;
+  /** 思考过程内容（可选） */
+  thinking?: string;
 }

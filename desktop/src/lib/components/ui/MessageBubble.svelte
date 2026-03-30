@@ -13,6 +13,7 @@
 	import MessageStatus from "./MessageStatus.svelte";
 	import StreamingCursor from "./StreamingCursor.svelte";
 	import Avatar from "./Avatar.svelte";
+	import ThinkingBlock from "./ThinkingBlock.svelte";
 	import { cn } from "$lib/utils/cn";
 
 	interface Props {
@@ -111,6 +112,11 @@
 						: "ai-message rounded-tl-sm"
 				)}
 			>
+				<!-- 思考过程（仅 AI 消息显示） -->
+				{#if !isUser && message.thinking}
+					<ThinkingBlock thinking={message.thinking} />
+				{/if}
+
 				<!-- 消息内容 -->
 				<div class="message-content">
 					<MarkdownRenderer content={message.content} {streaming} />
