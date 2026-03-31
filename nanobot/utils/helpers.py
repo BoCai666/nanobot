@@ -12,9 +12,9 @@ import tiktoken
 
 
 def strip_think(text: str) -> str:
-    """Remove <tool_call>…\`\`\` blocks and any unclosed trailing <arg_key> tag."""
-    text = re.sub(r"<tool_call>[\s\S]*?\`\`\`", "", text)
-    text = re.sub(r"<arg_key>[\s\S]*$", "", text)
+    """Remove <think>...</think> blocks and any unclosed trailing <think> tag."""
+    text = re.sub(r"<think>[\s\S]*?</think>", "", text)
+    text = re.sub(r"<think>[\s\S]*$", "", text)
     return text.strip()
 
 
@@ -35,7 +35,7 @@ class ThinkingStreamParser:
     """
 
     # Think tag patterns
-    THINK_OPEN = """"  # Opening tag
+    THINK_OPEN = '""""'  # Opening tag (four backticks)
     THINK_CLOSE = "```"  # Closing tag
 
     def __init__(self) -> None:
@@ -80,31 +80,32 @@ class ThinkingStreamParser:
                     # Found closing ``` - emit thinking content before it
                     thinking_out += self._buf[:close_pos]
                     self._think_content += self._buf[:close_pos]
-                    self._buf = self._buf[close_pos + len(self.THINK_CLOSE):]
+                    self._buf = self._buf[close_pos + len(self.THINK_CLOSE) :]
                     self._in_think = False
             else:
-                # Look for opening  21                    open_pos = self._buf.find(self.THINK_OPEN)
-                    if open_pos == -1:
-                        # Not found - check for partial open tag
-                        partial_pos = self._find_partial_tag(self._buf, self.THINK_OPEN)
-                        if partial_pos > 0:
-                            # Emit everything before partial, keep partial in buffer
-                            content_out += self._buf[:partial_pos]
-                            self._content += self._buf[:partial_pos]
-                            self._buf = self._buf[partial_pos:]
-                            break
-                        else:
-                            # No partial open - emit all as content
-                            content_out += self._buf
-                            self._content += self._buf
-                            self._buf = ""
-                            break
+                # Look for opening """" (four backticks)
+                open_pos = self._buf.find(self.THINK_OPEN)
+                if open_pos == -1:
+                    # Not found - check for partial open tag
+                    partial_pos = self._find_partial_tag(self._buf, self.THINK_OPEN)
+                    if partial_pos > 0:
+                        # Emit everything before partial, keep partial in buffer
+                        content_out += self._buf[:partial_pos]
+                        self._content += self._buf[:partial_pos]
+                        self._buf = self._buf[partial_pos:]
+                        break
                     else:
-                        # Found opening  - emit content before it
-                        content_out += self._buf[:open_pos]
-                        self._content += self._buf[:open_pos]
-                        self._buf = self._buf[open_pos + len(self.THINK_OPEN):]
-                        self._in_think = True
+                        # No partial open - emit all as content
+                        content_out += self._buf
+                        self._content += self._buf
+                        self._buf = ""
+                        break
+                else:
+                    # Found opening """" - emit content before it
+                    content_out += self._buf[:open_pos]
+                    self._content += self._buf[:open_pos]
+                    self._buf = self._buf[open_pos + len(self.THINK_OPEN) :]
+                    self._in_think = True
 
         return thinking_out, content_out
 
@@ -151,7 +152,9 @@ def detect_image_mime(data: bytes) -> str | None:
     return None
 
 
-def build_image_content_blocks(raw: bytes, mime: str, path: str, label: str) -> list[dict[str, Any]]:
+def build_image_content_blocks(
+    raw: bytes, mime: str, path: str, label: str
+) -> list[dict[str, Any]]:
     """Build native image blocks plus a short text label."""
     b64 = base64.b64encode(raw).decode()
     return [
@@ -197,6 +200,7 @@ def current_time_str(timezone: str | None = None) -> str:
 
 _UNSAFE_CHARS = re.compile(r'[<>:"/\\|?*]')
 
+
 def safe_filename(name: str) -> str:
     """Replace unsafe path characters with underscores."""
     return _UNSAFE_CHARS.sub("_", name).strip()
@@ -224,9 +228,9 @@ def split_message(content: str, max_len: int = 2000) -> list[str]:
             break
         cut = content[:max_len]
         # Try to break at newline first, then space, then hard break
-        pos = cut.rfind('\n')
+        pos = cut.rfind("\n")
         if pos <= 0:
-            pos = cut.rfind(' ')
+            pos = cut.rfind(" ")
         if pos <= 0:
             pos = max_len
         chunks.append(content[:pos])
@@ -377,21 +381,28 @@ def build_status_content(
     last_out = last_usage.get("completion_tokens", 0)
     ctx_total = max(context_window_tokens, 0)
     ctx_pct = int((context_tokens_estimate / ctx_total) * 100) if ctx_total > 0 else 0
-    ctx_used_str = f"{context_tokens_estimate // 1000}k" if context_tokens_estimate >= 1000 else str(context_tokens_estimate)
+    ctx_used_str = (
+        f"{context_tokens_estimate // 1000}k"
+        if context_tokens_estimate >= 1000
+        else str(context_tokens_estimate)
+    )
     ctx_total_str = f"{ctx_total // 1024}k" if ctx_total > 0 else "n/a"
-    return "\n".join([
-        f"\U0001f408 nanobot v{version}",
-        f"\U0001f9e0 Model: {model}",
-        f"\U0001f4ca Tokens: {last_in} in / {last_out} out",
-        f"\U0001f4da Context: {ctx_used_str}/{ctx_total_str} ({ctx_pct}%)",
-        f"\U0001f4ac Session: {session_msg_count} messages",
-        f"\u23f1 Uptime: {uptime}",
-    ])
+    return "\n".join(
+        [
+            f"\U0001f408 nanobot v{version}",
+            f"\U0001f9e0 Model: {model}",
+            f"\U0001f4ca Tokens: {last_in} in / {last_out} out",
+            f"\U0001f4da Context: {ctx_used_str}/{ctx_total_str} ({ctx_pct}%)",
+            f"\U0001f4ac Session: {session_msg_count} messages",
+            f"\u23f1 Uptime: {uptime}",
+        ]
+    )
 
 
 def sync_workspace_templates(workspace: Path, silent: bool = False) -> list[str]:
     """Sync bundled templates to workspace. Only creates missing files."""
     from importlib.resources import files as pkg_files
+
     try:
         tpl = pkg_files("nanobot") / "templates"
     except Exception:
@@ -417,6 +428,7 @@ def sync_workspace_templates(workspace: Path, silent: bool = False) -> list[str]
 
     if added and not silent:
         from rich.console import Console
+
         for name in added:
             Console().print(f"  [dim]Created {name}[/dim]")
     return added

@@ -18,10 +18,17 @@ from nanobot.providers.base import LLMProvider, LLMResponse, ToolCallRequest
 if TYPE_CHECKING:
     from nanobot.providers.registry import ProviderSpec
 
-_ALLOWED_MSG_KEYS = frozenset({
-    "role", "content", "tool_calls", "tool_call_id", "name",
-    "reasoning_content", "extra_content",
-})
+_ALLOWED_MSG_KEYS = frozenset(
+    {
+        "role",
+        "content",
+        "tool_calls",
+        "tool_call_id",
+        "name",
+        "reasoning_content",
+        "extra_content",
+    }
+)
 _ALNUM = string.ascii_letters + string.digits
 
 _STANDARD_TC_KEYS = frozenset({"id", "type", "index", "function"})
@@ -54,7 +61,9 @@ def _coerce_dict(value: Any) -> dict[str, Any] | None:
     return None
 
 
-def _extract_tc_extras(tc: Any) -> tuple[
+def _extract_tc_extras(
+    tc: Any,
+) -> tuple[
     dict[str, Any] | None,
     dict[str, Any] | None,
     dict[str, Any] | None,
@@ -70,14 +79,18 @@ def _extract_tc_extras(tc: Any) -> tuple[
     prov = None
     fn_prov = None
     if tc_dict is not None:
-        leftover = {k: v for k, v in tc_dict.items()
-                    if k not in _STANDARD_TC_KEYS and k != "extra_content" and v is not None}
+        leftover = {
+            k: v
+            for k, v in tc_dict.items()
+            if k not in _STANDARD_TC_KEYS and k != "extra_content" and v is not None
+        }
         if leftover:
             prov = leftover
         fn = _coerce_dict(tc_dict.get("function"))
         if fn is not None:
-            fn_leftover = {k: v for k, v in fn.items()
-                          if k not in _STANDARD_FN_KEYS and v is not None}
+            fn_leftover = {
+                k: v for k, v in fn.items() if k not in _STANDARD_FN_KEYS and v is not None
+            }
             if fn_leftover:
                 fn_prov = fn_leftover
     else:
@@ -149,9 +162,12 @@ class OpenAICompatProvider(LLMProvider):
         def _mark(msg: dict[str, Any]) -> dict[str, Any]:
             content = msg.get("content")
             if isinstance(content, str):
-                return {**msg, "content": [
-                    {"type": "text", "text": content, "cache_control": cache_marker},
-                ]}
+                return {
+                    **msg,
+                    "content": [
+                        {"type": "text", "text": content, "cache_control": cache_marker},
+                    ],
+                }
             if isinstance(content, list) and content:
                 nc = list(content)
                 nc[-1] = {**nc[-1], "cache_control": cache_marker}
@@ -331,7 +347,9 @@ class OpenAICompatProvider(LLMProvider):
                         finish_reason=str(response_map.get("finish_reason") or "stop"),
                         usage=self._extract_usage(response_map),
                     )
-                return LLMResponse(content="Error: API returned empty choices.", finish_reason="error")
+                return LLMResponse(
+                    content="Error: API returned empty choices.", finish_reason="error"
+                )
 
             choice0 = self._maybe_mapping(choices[0]) or {}
             msg0 = self._maybe_mapping(choice0.get("message")) or {}
@@ -361,14 +379,16 @@ class OpenAICompatProvider(LLMProvider):
                 if isinstance(args, str):
                     args = json_repair.loads(args)
                 ec, prov, fn_prov = _extract_tc_extras(tc)
-                parsed_tool_calls.append(ToolCallRequest(
-                    id=_short_tool_id(),
-                    name=str(fn.get("name") or ""),
-                    arguments=args if isinstance(args, dict) else {},
-                    extra_content=ec,
-                    provider_specific_fields=prov,
-                    function_provider_specific_fields=fn_prov,
-                ))
+                parsed_tool_calls.append(
+                    ToolCallRequest(
+                        id=_short_tool_id(),
+                        name=str(fn.get("name") or ""),
+                        arguments=args if isinstance(args, dict) else {},
+                        extra_content=ec,
+                        provider_specific_fields=prov,
+                        function_provider_specific_fields=fn_prov,
+                    )
+                )
 
             return LLMResponse(
                 content=content,
@@ -402,14 +422,16 @@ class OpenAICompatProvider(LLMProvider):
             if isinstance(args, str):
                 args = json_repair.loads(args)
             ec, prov, fn_prov = _extract_tc_extras(tc)
-            tool_calls.append(ToolCallRequest(
-                id=_short_tool_id(),
-                name=tc.function.name,
-                arguments=args,
-                extra_content=ec,
-                provider_specific_fields=prov,
-                function_provider_specific_fields=fn_prov,
-            ))
+            tool_calls.append(
+                ToolCallRequest(
+                    id=_short_tool_id(),
+                    name=tc.function.name,
+                    arguments=args,
+                    extra_content=ec,
+                    provider_specific_fields=prov,
+                    function_provider_specific_fields=fn_prov,
+                )
+            )
 
         return LLMResponse(
             content=content,
@@ -422,6 +444,7 @@ class OpenAICompatProvider(LLMProvider):
     @classmethod
     def _parse_chunks(cls, chunks: list[Any]) -> LLMResponse:
         content_parts: list[str] = []
+        reasoning_parts: list[str] = []  # Accumulate reasoning_content deltas
         tc_bufs: dict[int, dict[str, Any]] = {}
         finish_reason = "stop"
         usage: dict[str, int] = {}
@@ -429,10 +452,17 @@ class OpenAICompatProvider(LLMProvider):
         def _accum_tc(tc: Any, idx_hint: int) -> None:
             """Accumulate one streaming tool-call delta into *tc_bufs*."""
             tc_index: int = _get(tc, "index") if _get(tc, "index") is not None else idx_hint
-            buf = tc_bufs.setdefault(tc_index, {
-                "id": "", "name": "", "arguments": "",
-                "extra_content": None, "prov": None, "fn_prov": None,
-            })
+            buf = tc_bufs.setdefault(
+                tc_index,
+                {
+                    "id": "",
+                    "name": "",
+                    "arguments": "",
+                    "extra_content": None,
+                    "prov": None,
+                    "fn_prov": None,
+                },
+            )
             tc_id = _get(tc, "id")
             if tc_id:
                 buf["id"] = str(tc_id)
@@ -475,6 +505,10 @@ class OpenAICompatProvider(LLMProvider):
                 text = cls._extract_text_content(delta.get("content"))
                 if text:
                     content_parts.append(text)
+                # Extract reasoning_content from delta
+                reasoning_text = delta.get("reasoning_content")
+                if reasoning_text:
+                    reasoning_parts.append(reasoning_text)
                 for idx, tc in enumerate(delta.get("tool_calls") or []):
                     _accum_tc(tc, idx)
                 usage = cls._extract_usage(chunk_map) or usage
@@ -489,11 +523,17 @@ class OpenAICompatProvider(LLMProvider):
             delta = choice.delta
             if delta and delta.content:
                 content_parts.append(delta.content)
+            # Extract reasoning_content from delta
+            if delta:
+                reasoning_text = getattr(delta, "reasoning_content", None)
+                if reasoning_text:
+                    reasoning_parts.append(reasoning_text)
             for tc in (delta.tool_calls or []) if delta else []:
                 _accum_tc(tc, getattr(tc, "index", 0))
 
         return LLMResponse(
             content="".join(content_parts) or None,
+            reasoning_content="".join(reasoning_parts) or None,
             tool_calls=[
                 ToolCallRequest(
                     id=b["id"] or _short_tool_id(),
@@ -530,8 +570,13 @@ class OpenAICompatProvider(LLMProvider):
         tool_choice: str | dict[str, Any] | None = None,
     ) -> LLMResponse:
         kwargs = self._build_kwargs(
-            messages, tools, model, max_tokens, temperature,
-            reasoning_effort, tool_choice,
+            messages,
+            tools,
+            model,
+            max_tokens,
+            temperature,
+            reasoning_effort,
+            tool_choice,
         )
         try:
             return self._parse(await self._client.chat.completions.create(**kwargs))
@@ -548,10 +593,16 @@ class OpenAICompatProvider(LLMProvider):
         reasoning_effort: str | None = None,
         tool_choice: str | dict[str, Any] | None = None,
         on_content_delta: Callable[[str], Awaitable[None]] | None = None,
+        on_reasoning_delta: Callable[[str], Awaitable[None]] | None = None,
     ) -> LLMResponse:
         kwargs = self._build_kwargs(
-            messages, tools, model, max_tokens, temperature,
-            reasoning_effort, tool_choice,
+            messages,
+            tools,
+            model,
+            max_tokens,
+            temperature,
+            reasoning_effort,
+            tool_choice,
         )
         kwargs["stream"] = True
         kwargs["stream_options"] = {"include_usage": True}
@@ -560,10 +611,18 @@ class OpenAICompatProvider(LLMProvider):
             chunks: list[Any] = []
             async for chunk in stream:
                 chunks.append(chunk)
-                if on_content_delta and chunk.choices:
-                    text = getattr(chunk.choices[0].delta, "content", None)
-                    if text:
-                        await on_content_delta(text)
+                if chunk.choices:
+                    delta = chunk.choices[0].delta
+                    # Handle reasoning content delta (for models like DeepSeek-R1, Qianfan, etc.)
+                    if on_reasoning_delta:
+                        reasoning_text = getattr(delta, "reasoning_content", None)
+                        if reasoning_text:
+                            await on_reasoning_delta(reasoning_text)
+                    # Handle regular content delta
+                    if on_content_delta:
+                        text = getattr(delta, "content", None)
+                        if text:
+                            await on_content_delta(text)
             return self._parse_chunks(chunks)
         except Exception as e:
             return self._handle_error(e)
