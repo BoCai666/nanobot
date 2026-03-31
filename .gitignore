@@ -49,6 +49,10 @@ nano.*.save
 # AI agent working directories
 .sisyphus/
 
+# OpenCode knowledge base (auto-generated)
+AGENTS.md
+**/AGENTS.md
+
 # Test artifacts
 MagicMock/
 
