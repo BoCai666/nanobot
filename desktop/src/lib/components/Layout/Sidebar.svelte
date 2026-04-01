@@ -82,14 +82,13 @@
 	<div class="sidebar-header">
 		<div class="logo">
 			<span class="logo-icon">🤖</span>
-			{#if $sidebarExpanded}
-				<span class="logo-text">nanobot</span>
-			{/if}
+			<span class="logo-text" class:hidden={!$sidebarExpanded}>nanobot</span>
 		</div>
 		<button
 			class="toggle-btn"
 			onclick={() => toggleSidebar()}
 			title={$sidebarExpanded ? '收起侧边栏' : '展开侧边栏'}
+			aria-label={$sidebarExpanded ? '收起侧边栏' : '展开侧边栏'}
 		>
 			{#if $sidebarExpanded}
 				{@html ChevronLeftIcon({ class: 'w-4 h-4' })}
@@ -100,7 +99,7 @@
 	</div>
 
 	<!-- Channel 列表 -->
-	<nav class="channel-list">
+	<nav class="channel-list" aria-label="频道列表">
 		<div class="section-title" class:hidden={!$sidebarExpanded}>
 			Channels
 		</div>
@@ -110,17 +109,17 @@
 				class:active={$selectedChannel === channel.id}
 				onclick={() => selectChannel(channel.id)}
 				title={channel.name}
+				aria-label="{channel.name}{channel.connected ? ' (已连接)' : ' (未连接)'}"
 			>
 				<div class="channel-icon">
 					{@html getChannelIcon(channel.id, 'w-5 h-5')}
 				</div>
-				{#if $sidebarExpanded}
-					<span class="channel-name">{channel.name}</span>
-					<span
-						class="connection-indicator"
-						class:connected={channel.connected}
-					></span>
-				{/if}
+				<span class="channel-name" class:hidden={!$sidebarExpanded}>{channel.name}</span>
+				<span
+					class="connection-indicator"
+					class:connected={channel.connected}
+					class:hidden={!$sidebarExpanded}
+				></span>
 			</button>
 		{/each}
 	</nav>
@@ -132,36 +131,45 @@
 			class:active={$currentView === 'settings'}
 			onclick={() => setView('settings')}
 			title="设置"
+			aria-label="设置"
 		>
 			<div class="settings-icon">
 				{@html SettingsIcon({ class: 'w-5 h-5' })}
 			</div>
-			{#if $sidebarExpanded}
-				<span class="settings-text">设置</span>
-			{/if}
+			<span class="settings-text" class:hidden={!$sidebarExpanded}>设置</span>
 		</button>
 	</div>
 </aside>
 
 <style>
+	/* 侧边栏容器 - 温暖柔和背景 */
 	.sidebar {
 		display: flex;
 		flex-direction: column;
 		background-color: var(--color-bg-secondary);
 		border-right: 1px solid var(--color-border);
-		transition: width var(--transition-base);
+		transition: width var(--duration-base) var(--ease-out),
+		            background-color var(--duration-base) var(--ease-out);
 		overflow: hidden;
 		flex-shrink: 0;
+		/* GPU 加速优化 */
+		transform: translateZ(0);
+		will-change: width;
+		/* 限制重排影响范围 */
+		contain: layout style;
 	}
 
+	/* 头部区域 */
 	.sidebar-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: var(--space-4);
 		border-bottom: 1px solid var(--color-border);
+		background-color: transparent;
 	}
 
+	/* Logo 区域 - 使用 Lato 字体 */
 	.logo {
 		display: flex;
 		align-items: center;
@@ -172,21 +180,38 @@
 	.logo-icon {
 		font-size: 1.5rem;
 		flex-shrink: 0;
+		transition: transform var(--transition-fast);
 	}
 
+	.logo:hover .logo-icon {
+		transform: scale(1.05);
+	}
+
+	/* Logo 文字 - Lato 字体，温暖友好 */
 	.logo-text {
+		font-family: var(--font-sans); /* Lato */
 		font-size: 1.125rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
 		white-space: nowrap;
+		letter-spacing: var(--tracking-normal);
+		transition: opacity var(--transition-fast), transform var(--transition-fast);
+		transform-origin: left center;
 	}
 
+	/* 折叠状态下文字淡出 */
+	.sidebar:not(.expanded) .logo-text {
+		opacity: 0;
+		transform: translateX(-8px);
+	}
+
+	/* 折叠按钮 - 友好圆角 */
 	.toggle-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 28px;
-		height: 28px;
+		width: 32px;
+		height: 32px;
 		border-radius: var(--radius-md);
 		border: none;
 		background: transparent;
@@ -199,101 +224,153 @@
 	.toggle-btn:hover {
 		background-color: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
+		transform: scale(1.05);
 	}
 
+	.toggle-btn:active {
+		transform: scale(0.95);
+	}
+
+	/* Channel 列表区域 */
 	.channel-list {
 		flex: 1;
 		overflow-y: auto;
-		padding: var(--space-2);
+		padding: var(--space-3);
+		scrollbar-gutter: stable;
 	}
 
+	/* 区块标题 */
 	.section-title {
-		font-size: 0.6875rem;
+		font-family: var(--font-sans);
+		font-size: var(--text-xs);
 		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: var(--tracking-wider);
 		color: var(--color-text-tertiary);
-		padding: var(--space-3) var(--space-3) var(--space-2);
+		padding: var(--space-2) var(--space-2) var(--space-3);
 		white-space: nowrap;
+		transition: opacity var(--transition-fast);
 	}
 
 	.section-title.hidden {
-		display: none;
+		opacity: 0;
+		pointer-events: none;
 	}
 
+	/* 频道项目 - 友好圆角和交互 */
 	.channel-item {
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
 		width: 100%;
 		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		border: none;
 		background: transparent;
 		color: var(--color-text-secondary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		text-align: left;
+		position: relative;
+		overflow: hidden;
 	}
 
 	.channel-item:hover {
 		background-color: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
+		transform: translateX(2px);
+	}
+
+	.channel-item:active {
+		transform: translateX(0) scale(0.98);
 	}
 
 	.channel-item.active {
 		background-color: var(--color-primary);
 		color: var(--color-text-inverse);
+		box-shadow: var(--shadow-md);
 	}
 
+	.channel-item.active:hover {
+		background-color: var(--color-primary-dark);
+		transform: translateX(0);
+	}
+
+	/* 频道图标容器 */
 	.channel-icon {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 32px;
-		height: 32px;
+		width: 36px;
+		height: 36px;
 		border-radius: var(--radius-md);
 		background-color: var(--color-bg-tertiary);
 		flex-shrink: 0;
+		transition: background-color var(--transition-fast), transform var(--transition-fast);
+	}
+
+	.channel-item:hover .channel-icon {
+		transform: scale(1.05);
 	}
 
 	.channel-item.active .channel-icon {
-		background-color: rgba(255, 255, 255, 0.2);
+		background-color: color-mix(in srgb, var(--color-text-inverse) 20%, transparent);
 	}
 
+	/* 频道名称 - 带过渡动画 */
 	.channel-name {
 		flex: 1;
-		font-size: 0.875rem;
+		font-family: var(--font-sans);
+		font-size: var(--text-sm);
 		font-weight: 500;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		transition: opacity var(--transition-fast);
 	}
 
+	/* 连接状态指示器 - 更明显，使用语义色 */
 	.connection-indicator {
-		width: 8px;
-		height: 8px;
+		width: 10px;
+		height: 10px;
 		border-radius: 50%;
-		background-color: var(--color-neutral-400);
+		background-color: var(--color-error);
 		flex-shrink: 0;
+		transition: background-color var(--transition-base), transform var(--transition-fast);
+		position: relative;
 	}
 
+	/* 连接状态 - 成功绿色 + 微妙脉动 */
 	.connection-indicator.connected {
 		background-color: var(--color-success);
+		animation: pulse-glow 2s ease-in-out infinite;
 	}
 
+	/* 脉动动画 */
+	@keyframes pulse-glow {
+		0%, 100% {
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent);
+		}
+		50% {
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-success) 0%, transparent);
+		}
+	}
+
+	/* 底部区域 */
 	.sidebar-footer {
-		padding: var(--space-2);
+		padding: var(--space-3);
 		border-top: 1px solid var(--color-border);
+		background-color: transparent;
 	}
 
+	/* 设置按钮 - 与频道项目风格一致 */
 	.settings-btn {
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
 		width: 100%;
 		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		border: none;
 		background: transparent;
 		color: var(--color-text-secondary);
@@ -305,6 +382,11 @@
 	.settings-btn:hover {
 		background-color: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
+		transform: translateX(2px);
+	}
+
+	.settings-btn:active {
+		transform: translateX(0) scale(0.98);
 	}
 
 	.settings-btn.active {
@@ -316,15 +398,91 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 32px;
-		height: 32px;
+		width: 36px;
+		height: 36px;
 		border-radius: var(--radius-md);
 		flex-shrink: 0;
+		transition: transform var(--transition-fast);
+	}
+
+	.settings-btn:hover .settings-icon {
+		transform: rotate(15deg);
 	}
 
 	.settings-text {
-		font-size: 0.875rem;
+		font-family: var(--font-sans);
+		font-size: var(--text-sm);
 		font-weight: 500;
 		white-space: nowrap;
+		transition: opacity var(--transition-fast);
+	}
+
+	/* 通用隐藏类 - 配合 class:hidden 指令 */
+	.hidden {
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* Logo 文字隐藏状态 */
+	.logo-text.hidden {
+		opacity: 0;
+		transform: translateX(-8px);
+	}
+
+	/* 频道名称隐藏状态 */
+	.channel-name.hidden {
+		opacity: 0;
+		width: 0;
+		padding: 0;
+	}
+
+	/* 设置文字隐藏状态 */
+	.settings-text.hidden {
+		opacity: 0;
+		width: 0;
+		padding: 0;
+	}
+
+	/* 连接状态指示器隐藏状态 */
+	.connection-indicator.hidden {
+		opacity: 0;
+		transform: scale(0);
+	}
+
+	/* 区块标题隐藏状态 */
+	.section-title.hidden {
+		opacity: 0;
+		height: 0;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	/* 滚动条样式 - 温暖色调 */
+	.channel-list::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.channel-list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.channel-list::-webkit-scrollbar-thumb {
+		background: var(--color-neutral-300);
+		border-radius: 3px;
+	}
+
+	.channel-list::-webkit-scrollbar-thumb:hover {
+		background: var(--color-neutral-400);
+	}
+
+	/* 深色模式滚动条 */
+	@media (prefers-color-scheme: dark) {
+		.channel-list::-webkit-scrollbar-thumb {
+			background: var(--color-neutral-600);
+		}
+
+		.channel-list::-webkit-scrollbar-thumb:hover {
+			background: var(--color-neutral-500);
+		}
 	}
 </style>

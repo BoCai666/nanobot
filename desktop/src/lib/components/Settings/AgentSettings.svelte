@@ -297,7 +297,7 @@
 
 	.form-section.advanced {
 		border-color: var(--color-warning);
-		background-color: rgba(245, 158, 11, 0.05);
+		background-color: var(--color-warning-bg);
 	}
 
 	.section-title {
@@ -336,7 +336,7 @@
 	.field-input:focus {
 		outline: none;
 		border-color: var(--color-primary);
-		box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1);
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
 	}
 
 	.field-hint {
@@ -356,7 +356,7 @@
 	/* API 配置区域 */
 	.api-section {
 		border-color: var(--color-primary);
-		background-color: rgba(13, 148, 136, 0.05);
+		background-color: var(--color-primary-bg);
 	}
 
 	.input-with-button {
@@ -436,7 +436,7 @@
 
 	.field-slider::-webkit-slider-thumb:hover {
 		transform: scale(1.1);
-		box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+		box-shadow: 0 0 0 4px var(--color-primary-ring-hover);
 	}
 
 	.field-slider::-moz-range-thumb {

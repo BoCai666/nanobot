@@ -175,7 +175,7 @@
 		background: transparent;
 		color: var(--color-text-secondary);
 		cursor: pointer;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		transition: all var(--transition-fast);
 		display: flex;
 		align-items: center;
@@ -185,6 +185,7 @@
 	.back-btn:hover {
 		background-color: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
+		transform: translateX(-2px);
 	}
 
 	.header-info {
@@ -221,13 +222,16 @@
 		font-size: 0.875rem;
 		color: var(--color-success);
 		animation: fadeIn var(--transition-fast);
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
 	}
 
-	/* 按钮样式 */
+	/* 按钮样式 - 温暖友好的圆角按钮 */
 	.btn-secondary,
 	.btn-primary {
-		padding: var(--space-2) var(--space-4);
-		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-5);
+		border-radius: var(--radius-xl);
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -235,33 +239,46 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
+		min-height: 40px;
 	}
 
 	.btn-secondary {
 		border: 1px solid var(--color-border);
-		background-color: transparent;
+		background-color: var(--color-bg-primary);
 		color: var(--color-text-secondary);
 	}
 
 	.btn-secondary:hover:not(:disabled) {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
+		background-color: var(--color-bg-tertiary);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.btn-primary {
-		border: 1px solid var(--color-primary);
+		border: none;
 		background-color: var(--color-primary);
 		color: var(--color-text-inverse);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.btn-primary:hover:not(:disabled) {
 		background-color: var(--color-primary-dark);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-md);
+	}
+
+	.btn-secondary:active:not(:disabled),
+	.btn-primary:active:not(:disabled) {
+		transform: translateY(0);
 	}
 
 	.btn-secondary:disabled,
 	.btn-primary:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+		transform: none;
 	}
 
 	/* 加载动画 */
@@ -279,46 +296,81 @@
 		to { opacity: 1; transform: translateY(0); }
 	}
 
-	/* 标签页导航 */
+	/* 标签页导航 - 温暖友好的圆角标签 */
 	.settings-tabs {
 		display: flex;
-		gap: var(--space-1);
-		padding: var(--space-2) var(--space-6);
+		gap: var(--space-2);
+		padding: var(--space-3) var(--space-6);
 		border-bottom: 1px solid var(--color-border);
 		background-color: var(--color-bg-secondary);
 		overflow-x: auto;
+		/* 滚动条隐藏但保持可滚动 */
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.settings-tabs::-webkit-scrollbar {
+		display: none;
 	}
 
 	.tab-btn {
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
-		padding: var(--space-3) var(--space-4);
-		border: none;
-		background: transparent;
+		padding: var(--space-3) var(--space-5);
+		border: 1px solid transparent;
+		background-color: var(--color-bg-primary);
 		color: var(--color-text-secondary);
 		cursor: pointer;
-		border-radius: var(--radius-md);
-		transition: all var(--transition-fast);
+		border-radius: var(--radius-xl);
+		transition: all var(--transition-base);
 		white-space: nowrap;
+		position: relative;
+		overflow: hidden;
 	}
 
-	.tab-btn:hover {
+	/* 标签页悬停效果 */
+	.tab-btn:hover:not(.active) {
 		background-color: var(--color-bg-tertiary);
 		color: var(--color-text-primary);
+		border-color: var(--color-border);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-sm);
 	}
 
+	/* 激活状态 - 主色调背景 */
 	.tab-btn.active {
 		background-color: var(--color-primary);
 		color: var(--color-text-inverse);
+		border-color: var(--color-primary);
+		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+	}
+
+	.tab-btn.active .tab-icon {
+		animation: iconBounce 0.3s ease;
+	}
+
+	@keyframes iconBounce {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.1); }
 	}
 
 	.tab-btn.hidden {
 		display: none;
 	}
 
+	.tab-btn:active {
+		transform: translateY(0);
+	}
+
 	.tab-icon {
 		font-size: 1.25rem;
+		transition: transform var(--transition-fast);
+	}
+
+	.tab-btn:hover .tab-icon {
+		transform: scale(1.05);
 	}
 
 	.tab-info {
@@ -330,19 +382,24 @@
 
 	.tab-label {
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 600;
+		letter-spacing: 0.01em;
 	}
 
 	.tab-desc {
 		font-size: 0.6875rem;
-		opacity: 0.8;
+		opacity: 0.75;
+		letter-spacing: 0.02em;
 	}
 
-	/* 内容区域 */
+	/* 内容区域 - 柔和背景 */
 	.settings-content {
 		flex: 1;
 		overflow-y: auto;
 		padding: var(--space-6);
+		background-color: var(--color-bg-primary);
+		/* 为表单区域添加柔和的背景 */
+		min-height: 0;
 	}
 
 	/* 响应式 */
@@ -351,6 +408,7 @@
 			flex-direction: column;
 			gap: var(--space-3);
 			align-items: flex-start;
+			padding: var(--space-3) var(--space-4);
 		}
 
 		.header-actions {
@@ -358,12 +416,42 @@
 			justify-content: flex-end;
 		}
 
+		.settings-tabs {
+			padding: var(--space-2) var(--space-4);
+			gap: var(--space-1);
+		}
+
 		.tab-info {
 			display: none;
 		}
 
 		.tab-btn {
-			padding: var(--space-2);
+			padding: var(--space-3);
+		}
+
+		.tab-btn.active {
+			transform: translateY(-1px);
+		}
+
+		.settings-content {
+			padding: var(--space-4);
+		}
+
+		.btn-secondary,
+		.btn-primary {
+			padding: var(--space-2) var(--space-4);
+			min-height: 36px;
+		}
+	}
+
+	/* 深色模式优化 */
+	@media (prefers-color-scheme: dark) {
+		.btn-secondary:hover:not(:disabled) {
+			background-color: var(--color-bg-tertiary);
+		}
+
+		.tab-btn:hover:not(.active) {
+			background-color: var(--color-bg-tertiary);
 		}
 	}
 </style>

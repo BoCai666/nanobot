@@ -324,7 +324,7 @@
 	.field-input:focus {
 		outline: none;
 		border-color: var(--color-primary);
-		box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1);
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
 	}
 
 	/* 高级选项 */

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChatContainer from '$lib/components/ui/ChatContainer.svelte';
+	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import type { Message } from '$lib/types/message';
 	import { agentAPI } from '$lib/api/agent';
 	import { logUserMessage, logAiResponseStart, logAiDelta, logAiResponseEnd } from '$lib/api/tray';
@@ -25,6 +26,17 @@
 
 	// API 连接状态
 	let connectionStatus = $state<'connected' | 'disconnected' | 'connecting'>('disconnected');
+
+	// 错误状态
+	let errorState = $state<{
+		hasError: boolean;
+		title: string;
+		message: string;
+	}>({
+		hasError: false,
+		title: '',
+		message: ''
+	});
 
 	// 检查 API 连接状态
 	async function checkConnection() {
@@ -150,6 +162,9 @@
 	async function handleSend(content: string) {
 		if (!chatContainerRef) return;
 
+		// 清除之前的错误状态
+		errorState = { hasError: false, title: '', message: '' };
+
 		// 记录用户消息到控制台
 		await logUserMessage(content);
 
@@ -177,10 +192,12 @@
 		} catch (error) {
 			console.error('Failed to generate response:', error);
 
-			// 添加错误消息
-			const aiMessageId = chatContainerRef.startStreamingResponse();
-			chatContainerRef.appendStreamingContent(aiMessageId, '❌ 生成回复时出错，请稍后重试。');
-			chatContainerRef.finishStreamingResponse(aiMessageId);
+			// 显示错误状态
+			errorState = {
+				hasError: true,
+				title: '生成回复失败',
+				message: '抱歉，生成回复时遇到问题。请检查网络连接并重试。'
+			};
 		} finally {
 			isGenerating = false;
 		}
@@ -195,6 +212,17 @@
 	// 清除对话
 	function clearChat() {
 		chatContainerRef?.clearMessages();
+		// 同时清除错误状态
+		errorState = { hasError: false, title: '', message: '' };
+	}
+
+	// 重试发送
+	async function handleRetry() {
+		// 重新检查连接
+		await checkConnection();
+		
+		// 清除错误状态
+		errorState = { hasError: false, title: '', message: '' };
 	}
 </script>
 
@@ -226,11 +254,26 @@
 		</div>
 	</div>
 	<div class="chat-content">
-		<ChatContainer
-			bind:this={chatContainerRef}
-			isLoading={isGenerating}
-			onSend={handleSend}
-		/>
+		{#if errorState.hasError}
+			<!-- 错误状态 -->
+			<div class="error-container">
+				<ErrorState
+					title={errorState.title}
+					message={errorState.message}
+					icon="⚠️"
+					showRetry={true}
+					retryText="重试连接"
+					onRetry={handleRetry}
+				/>
+			</div>
+		{:else}
+			<!-- 正常聊天界面 -->
+			<ChatContainer
+				bind:this={chatContainerRef}
+				isLoading={isGenerating}
+				onSend={handleSend}
+			/>
+		{/if}
 	</div>
 </div>
 
@@ -324,5 +367,22 @@
 	.chat-content {
 		flex: 1;
 		overflow: hidden;
+	}
+
+	/* 错误状态容器 */
+	.error-container {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-8);
+		background-color: var(--color-bg-primary);
+	}
+
+	/* 响应 prefers-reduced-motion */
+	@media (prefers-reduced-motion: reduce) {
+		.status-dot.connected {
+			animation: none;
+		}
 	}
 </style>

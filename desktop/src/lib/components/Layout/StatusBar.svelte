@@ -209,7 +209,7 @@
 	/* Agent 状态样式 */
 	.status-running {
 		color: var(--color-success);
-		background-color: rgba(34, 197, 94, 0.1);
+		background-color: var(--color-success-bg);
 	}
 
 	.status-running .status-icon {
@@ -223,23 +223,23 @@
 
 	.status-error {
 		color: var(--color-error);
-		background-color: rgba(239, 68, 68, 0.1);
+		background-color: var(--color-error-bg);
 	}
 
 	/* 连接状态样式 */
 	.connection-connected {
 		color: var(--color-success);
-		background-color: rgba(34, 197, 94, 0.1);
+		background-color: var(--color-success-bg);
 	}
 
 	.connection-disconnected {
 		color: var(--color-error);
-		background-color: rgba(239, 68, 68, 0.1);
+		background-color: var(--color-error-bg);
 	}
 
 	.connection-connecting {
 		color: var(--color-warning);
-		background-color: rgba(245, 158, 11, 0.1);
+		background-color: var(--color-warning-bg);
 	}
 
 	/* 模式切换按钮 */

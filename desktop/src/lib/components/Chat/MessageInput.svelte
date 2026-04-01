@@ -99,7 +99,7 @@
 
 <style>
 	.message-input-container {
-		padding: var(--space-3) var(--space-4);
+		padding: var(--space-4);
 		background-color: var(--color-bg-primary);
 		border-top: 1px solid var(--color-border);
 	}
@@ -108,15 +108,18 @@
 		display: flex;
 		gap: var(--space-3);
 		align-items: flex-end;
-		background-color: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
-		padding: var(--space-3);
-		transition: border-color var(--transition-fast);
+		background-color: var(--color-bg-tertiary);
+		border: 1.5px solid transparent;
+		border-radius: var(--radius-xl);
+		padding: var(--space-3) var(--space-4);
+		transition: all var(--transition-base);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.input-wrapper:focus-within {
 		border-color: var(--color-primary);
+		background-color: var(--color-bg-secondary);
+		box-shadow: var(--shadow-md), 0 0 0 3px var(--color-primary-ring);
 	}
 
 	.message-textarea {
@@ -125,45 +128,50 @@
 		border: none;
 		background: transparent;
 		color: var(--color-text-primary);
-		font-size: 0.9375rem;
-		line-height: 1.5;
+		font-size: var(--text-base);
+		line-height: var(--leading-relaxed);
 		min-height: 24px;
 		max-height: 200px;
 		padding: 0;
 		outline: none;
-		font-family: inherit;
+		font-family: var(--font-sans);
 	}
 
 	.message-textarea::placeholder {
 		color: var(--color-text-tertiary);
+		opacity: 0.8;
 	}
 
 	.message-textarea.disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
 	.input-actions {
 		display: flex;
 		align-items: center;
-		gap: var(--space-2);
+		gap: var(--space-3);
 		flex-shrink: 0;
 	}
 
 	.char-count {
-		font-size: 0.75rem;
+		font-size: var(--text-xs);
 		color: var(--color-text-tertiary);
 		white-space: nowrap;
+		opacity: 0.7;
+		transition: opacity var(--transition-fast);
 	}
 
 	.char-count.near-limit {
 		color: var(--color-warning);
+		opacity: 1;
+		font-weight: 500;
 	}
 
 	.send-btn {
-		width: 36px;
-		height: 36px;
-		border-radius: var(--radius-md);
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-xl);
 		border: none;
 		background-color: var(--color-primary);
 		color: var(--color-text-inverse);
@@ -171,37 +179,54 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all var(--transition-fast);
+		transition: all var(--transition-base);
+		box-shadow: 0 2px 8px -2px var(--color-primary-shadow);
 	}
 
 	.send-btn:hover:not(.disabled) {
 		background-color: var(--color-primary-dark);
-		transform: scale(1.05);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px -2px var(--color-primary-shadow-hover);
 	}
 
 	.send-btn:active:not(.disabled) {
-		transform: scale(0.95);
+		transform: translateY(0) scale(0.96);
+		box-shadow: 0 1px 4px var(--color-primary-shadow);
 	}
 
 	.send-btn.disabled {
 		background-color: var(--color-neutral-300);
 		cursor: not-allowed;
 		transform: none;
+		box-shadow: none;
+		opacity: 0.6;
 	}
 
 	.send-icon {
-		width: 18px;
-		height: 18px;
+		width: 20px;
+		height: 20px;
+		transition: transform var(--transition-fast);
+	}
+
+	.send-btn:hover:not(.disabled) .send-icon {
+		transform: translateX(1px);
 	}
 
 	.input-hint {
 		display: flex;
 		justify-content: center;
 		margin-top: var(--space-2);
+		opacity: 0.7;
+		transition: opacity var(--transition-fast);
+	}
+
+	.input-wrapper:focus-within ~ .input-hint {
+		opacity: 1;
 	}
 
 	.hint-text {
-		font-size: 0.75rem;
+		font-size: var(--text-xs);
 		color: var(--color-text-tertiary);
+		letter-spacing: var(--tracking-wide);
 	}
 </style>

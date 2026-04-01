@@ -339,7 +339,7 @@
 	.markdown-content :global(pre) {
 		margin: 0.75rem 0;
 		padding: 1rem;
-		background-color: #0d1117;
+		background-color: var(--code-bg);
 		border-radius: var(--radius-md);
 		overflow-x: auto;
 		font-family: var(--font-mono);
@@ -453,7 +453,7 @@
 
 	/* 暗色模式适配 */
 	:global(.dark) .markdown-content :global(pre) {
-		background-color: #161b22;
+		background-color: var(--code-header-bg);
 	}
 
 	:global(.dark) .markdown-content :global(code:not(pre code)) {

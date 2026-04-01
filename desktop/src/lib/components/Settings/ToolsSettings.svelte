@@ -443,7 +443,7 @@
 	.field-input:focus {
 		outline: none;
 		border-color: var(--color-primary);
-		box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1);
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
 	}
 
 	/* 添加服务器表单 */
@@ -572,7 +572,7 @@
 	}
 
 	.remove-btn:hover {
-		background-color: rgba(239, 68, 68, 0.1);
+		background-color: var(--color-error-bg);
 	}
 
 	/* 小开关 */

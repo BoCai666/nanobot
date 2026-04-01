@@ -156,52 +156,52 @@
 </div>
 
 <style>
-	/* 用户消息气泡样式 */
+	/* 用户消息气泡样式 - 使用设计系统变量 */
 	.user-message {
-		background-color: #3b82f6;
-		color: #ffffff;
+		background-color: var(--user-bubble, #3D9970);
+		color: var(--user-bubble-foreground, #FAFAF8);
 	}
 
 	/* AI 消息气泡样式 - 浅色模式 */
 	.ai-message {
-		background-color: var(--ai-bubble, #f1f5f9);
-		color: var(--ai-bubble-foreground, #1e293b);
+		background-color: var(--ai-bubble, #F7F6F3);
+		color: var(--ai-bubble-foreground, #37352F);
 	}
 
 	/* 用户消息中的 Markdown 样式覆盖 */
 	.user-message .message-content :global(.markdown-content) {
-		color: #ffffff;
+		color: var(--user-bubble-foreground, #FAFAF8);
 	}
 
 	.user-message .message-content :global(a) {
-		color: rgba(255, 255, 255, 0.9);
-		border-bottom-color: rgba(255, 255, 255, 0.5);
+		color: var(--user-bubble-overlay-90, rgba(250, 250, 248, 0.9));
+		border-bottom-color: var(--user-bubble-overlay-50, rgba(250, 250, 248, 0.5));
 	}
 
 	.user-message .message-content :global(a:hover) {
-		color: #ffffff;
-		border-bottom-color: #ffffff;
+		color: var(--user-bubble-foreground, #FAFAF8);
+		border-bottom-color: var(--user-bubble-foreground, #FAFAF8);
 	}
 
 	.user-message .message-content :global(code:not(pre code)) {
-		background-color: rgba(255, 255, 255, 0.2);
-		color: #ffffff;
+		background-color: var(--user-bubble-overlay-20, rgba(250, 250, 248, 0.2));
+		color: var(--user-bubble-foreground, #FAFAF8);
 	}
 
 	.user-message .message-content :global(blockquote) {
-		border-left-color: rgba(255, 255, 255, 0.5);
-		background-color: rgba(255, 255, 255, 0.1);
+		border-left-color: var(--user-bubble-overlay-50, rgba(250, 250, 248, 0.5));
+		background-color: var(--user-bubble-overlay-15, rgba(250, 250, 248, 0.15));
 	}
 
 	.user-message .message-content :global(strong),
 	.user-message .message-content :global(b) {
-		color: #ffffff;
+		color: var(--user-bubble-foreground, #FAFAF8);
 	}
 
 	/* 暗色模式适配 */
 	:global(.dark) .ai-message {
-		background-color: var(--ai-bubble, #1e293b);
-		color: var(--ai-bubble-foreground, #e2e8f0);
+		background-color: var(--ai-bubble, #282622);
+		color: var(--ai-bubble-foreground, #EBE9E4);
 	}
 
 	/* 时间戳悬停效果 */

@@ -41,24 +41,24 @@
 	}
 </script>
 
-<div class={cn("relative rounded-lg overflow-hidden bg-[#0d1117]", className)}>
+<div class={cn("relative rounded-lg overflow-hidden bg-[var(--code-bg)]", className)}>
 	<!-- 顶部工具栏 -->
-	<div class="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-[#30363d]">
+	<div class="flex items-center justify-between px-4 py-2 bg-[var(--code-header-bg)] border-b border-[var(--code-border)]">
 		<!-- 语言标签 -->
-		<span class="text-xs font-medium text-[#8b949e] uppercase tracking-wide">
+		<span class="text-xs font-medium text-[var(--code-muted)] uppercase tracking-wide">
 			{language}
 		</span>
 
 		<!-- 复制按钮 -->
 		<button
 			onclick={handleCopy}
-			class="flex items-center gap-1.5 px-2 py-1 text-xs text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#30363d] rounded transition-colors"
+			class="flex items-center gap-1.5 px-2 py-1 text-xs text-[var(--code-muted)] hover:text-[var(--code-text)] hover:bg-[var(--code-border)] rounded transition-colors"
 			aria-label={copied ? "已复制" : "复制代码"}
 			title={copied ? "已复制!" : "复制代码"}
 		>
 			{#if copied}
-				<Check class="w-4 h-4 text-[#3fb950]" />
-				<span class="text-[#3fb950]">已复制</span>
+				<Check class="w-4 h-4 text-[var(--code-highlight)]" />
+				<span class="text-[var(--code-highlight)]">已复制</span>
 			{:else}
 				<Copy class="w-4 h-4" />
 				<span>复制</span>
@@ -70,7 +70,7 @@
 	<div class="relative overflow-x-auto">
 		{#if isLoading}
 			<!-- 加载状态 -->
-			<pre class="p-4 text-sm font-mono text-[#c9d1d9]"><code>{code}</code></pre>
+			<pre class="p-4 text-sm font-mono text-[var(--code-text)]"><code>{code}</code></pre>
 		{:else}
 			<!-- 高亮后的代码 -->
 			<div class="shiki-wrapper">
@@ -108,11 +108,11 @@
 	}
 
 	:global(.shiki-wrapper pre::-webkit-scrollbar-thumb) {
-		background: #30363d;
+		background: var(--code-scrollbar);
 		border-radius: 4px;
 	}
 
 	:global(.shiki-wrapper pre::-webkit-scrollbar-thumb:hover) {
-		background: #484f58;
+		background: var(--code-scrollbar-hover);
 	}
 </style>
