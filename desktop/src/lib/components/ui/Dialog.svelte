@@ -38,6 +38,7 @@
 	<div
 		class="dialog-backdrop"
 		onclick={handleBackdropClick}
+		onkeydown={handleKeyDown}
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div

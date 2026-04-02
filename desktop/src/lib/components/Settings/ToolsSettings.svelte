@@ -184,7 +184,7 @@
 						</div>
 
 						<div class="form-row">
-							<label class="field-label">连接类型</label>
+							<span class="field-label">连接类型</span>
 							<div class="radio-group">
 								<label class="radio-label">
 									<input

@@ -264,10 +264,6 @@
 		color: #854d0e;
 	}
 
-	.text-primary {
-		color: var(--color-primary);
-	}
-
 	.text-white {
 		color: white;
 	}

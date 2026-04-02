@@ -25,6 +25,13 @@ export interface Channel {
 	connected: boolean;
 }
 
+// 当前对话信息
+export interface CurrentConversation {
+	id: string;
+	title: string;
+	channelId: string;
+}
+
 // 创建立即调用的应用状态函数
 export function createAppStore() {
 	// 当前视图
@@ -57,8 +64,11 @@ export function createAppStore() {
 		{ id: 'slack', name: 'Slack', icon: 'slack', connected: false }
 	]);
 
-	// 当前选中的 Channel 名称（使用 $derived）
-	let currentChannelName = $derived(() => {
+	// 当前选中的对话
+	let currentConversation = $state<CurrentConversation | null>(null);
+
+	// 当前选中的 Channel 名称（使用 $derived.by）
+	let currentChannelName = $derived.by(() => {
 		const channel = channels.find(ch => ch.id === selectedChannel);
 		return channel?.name || 'Chat';
 	});

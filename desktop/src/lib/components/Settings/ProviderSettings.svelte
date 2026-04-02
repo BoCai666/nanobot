@@ -125,7 +125,7 @@
 
 						{#if appState.appMode === 'advanced' && provider.models && provider.models.length > 0}
 							<div class="field-group">
-								<label class="field-label">支持的模型</label>
+								<span class="field-label">支持的模型</span>
 								<div class="models-list">
 									{#each provider.models as model}
 										<span class="model-tag">{model}</span>

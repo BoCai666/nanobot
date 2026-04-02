@@ -1,38 +1,28 @@
 <script lang="ts">
-	import { sidebarExpanded, selectedChannel, channels, currentView, toggleSidebar, selectChannel, setView } from '$lib/stores/app';
+	/**
+	 * Sidebar 组件
+	 * 
+	 * 显示历史对话记录面板
+	 * - 新建对话按钮
+	 * - 历史对话列表
+	 * - 设置入口
+	 */
+	import { sidebarExpanded, currentView, toggleSidebar, setView } from '$lib/stores/app';
+	import { historyStore, type ConversationHistory } from '$lib/stores/history.svelte';
+	import { onMount } from 'svelte';
 
-	// 图标组件 - Telegram
-	function TelegramIcon({ class: className = '' }: { class?: string }) {
-		return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor">
-			<path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-		</svg>`;
-	}
+	// 当前选中的对话 ID
+	let activeConversationId = $state<string>('');
 
-	// 图标组件 - Discord
-	function DiscordIcon({ class: className = '' }: { class?: string }) {
-		return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor">
-			<path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-		</svg>`;
-	}
+	// 组件挂载时初始化历史记录
+	onMount(() => {
+		historyStore.init();
+	});
 
-	// 图标组件 - WhatsApp
-	function WhatsAppIcon({ class: className = '' }: { class?: string }) {
-		return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor">
-			<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-		</svg>`;
-	}
-
-	// 图标组件 - Feishu
-	function FeishuIcon({ class: className = '' }: { class?: string }) {
-		return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor">
-			<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-		</svg>`;
-	}
-
-	// 图标组件 - Slack
-	function SlackIcon({ class: className = '' }: { class?: string }) {
-		return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor">
-			<path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+	// 图标组件 - 新建对话
+	function NewChatIcon({ class: className = '' }: { class?: string }) {
+		return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M12 5v14M5 12h14"/>
 		</svg>`;
 	}
 
@@ -57,19 +47,53 @@
 		</svg>`;
 	}
 
-	// Channel 图标映射
-	const channelIcons: Record<string, (props: { class?: string }) => string> = {
-		telegram: TelegramIcon,
-		discord: DiscordIcon,
-		whatsapp: WhatsAppIcon,
-		feishu: FeishuIcon,
-		slack: SlackIcon
-	};
+	// 图标组件 - 历史
+	function HistoryIcon({ class: className = '' }: { class?: string }) {
+		return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<circle cx="12" cy="12" r="10"/>
+			<polyline points="12 6 12 12 16 14"/>
+		</svg>`;
+	}
 
-	// 获取图标函数
-	function getChannelIcon(channelId: string, className: string): string {
-		const iconFn = channelIcons[channelId];
-		return iconFn ? iconFn({ class: className }) : FeishuIcon({ class: className });
+	// 新建对话
+	function handleNewChat() {
+		// 清除当前选中的对话
+		activeConversationId = '';
+		// 切换到聊天视图
+		setView('chat');
+		console.log('新建对话');
+	}
+
+	// 选择对话
+	function handleSelectConversation(conversation: ConversationHistory) {
+		activeConversationId = conversation.id;
+		setView('chat');
+		console.log('选择对话:', conversation.title);
+		// TODO: 加载对话内容
+	}
+
+	// 删除对话
+	function handleDeleteConversation(id: string) {
+		historyStore.deleteConversation(id);
+		// 如果删除的是当前对话，清除选中状态
+		if (activeConversationId === id) {
+			activeConversationId = '';
+		}
+	}
+
+	// 格式化相对时间
+	function formatRelativeTime(date: Date): string {
+		const now = new Date();
+		const diff = now.getTime() - date.getTime();
+		const minutes = Math.floor(diff / 60000);
+		const hours = Math.floor(minutes / 60);
+		const days = Math.floor(hours / 24);
+
+		if (minutes < 1) return '刚刚';
+		if (minutes < 60) return `${minutes}分钟前`;
+		if (hours < 24) return `${hours}小时前`;
+		if (days < 7) return `${days}天前`;
+		return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 	}
 </script>
 
@@ -100,30 +124,75 @@
 		</button>
 	</div>
 
-	<!-- Channel 列表 -->
-	<nav class="channel-list" aria-label="频道列表">
+	<!-- 新建对话按钮 -->
+	<div class="new-chat-section">
+		<button
+			class="new-chat-btn"
+			onclick={handleNewChat}
+			title="新建对话"
+			aria-label="新建对话"
+		>
+			<div class="btn-icon">
+				{@html NewChatIcon({ class: 'w-5 h-5' })}
+			</div>
+			<span class="btn-text" class:hidden={!$sidebarExpanded}>新建对话</span>
+		</button>
+	</div>
+
+	<!-- 历史记录列表 -->
+	<nav class="history-list" aria-label="历史记录">
 		<div class="section-title" class:hidden={!$sidebarExpanded}>
-			Channels
+			{@html HistoryIcon({ class: 'w-3.5 h-3.5' })}
+			<span>历史记录</span>
 		</div>
-		{#each $channels as channel (channel.id)}
-			<button
-				class="channel-item"
-				class:active={$selectedChannel === channel.id}
-				onclick={() => selectChannel(channel.id)}
-				title={channel.name}
-				aria-label="{channel.name}{channel.connected ? ' (已连接)' : ' (未连接)'}"
-			>
-				<div class="channel-icon">
-					{@html getChannelIcon(channel.id, 'w-5 h-5')}
+		
+		{#if $sidebarExpanded}
+			{#if historyStore.isEmpty}
+				<div class="empty-state">
+					<span class="empty-icon">💬</span>
+					<span class="empty-text">暂无历史记录</span>
 				</div>
-				<span class="channel-name" class:hidden={!$sidebarExpanded}>{channel.name}</span>
-				<span
-					class="connection-indicator"
-					class:connected={channel.connected}
-					class:hidden={!$sidebarExpanded}
-				></span>
-			</button>
-		{/each}
+			{:else}
+				<ul class="conversation-list">
+					{#each historyStore.conversations as conversation (conversation.id)}
+						<li>
+							<button
+								class="history-item"
+								class:active={conversation.id === activeConversationId}
+								onclick={() => handleSelectConversation(conversation)}
+								title={conversation.title}
+							>
+								<div class="item-content">
+									<span class="item-title">{conversation.title}</span>
+									<span class="item-time">{formatRelativeTime(conversation.updatedAt)}</span>
+								</div>
+								<button
+									class="delete-btn"
+									onclick={(e) => { e.stopPropagation(); handleDeleteConversation(conversation.id); }}
+									title="删除"
+									aria-label="删除对话"
+								>
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+										<path d="M18 6L6 18M6 6l12 12"/>
+									</svg>
+								</button>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		{:else}
+			<!-- 折叠状态：只显示图标按钮 -->
+			<div class="collapsed-actions">
+				<button
+					class="collapsed-btn"
+					onclick={handleNewChat}
+					title="新建对话"
+				>
+					{@html NewChatIcon({ class: 'w-5 h-5' })}
+				</button>
+			</div>
+		{/if}
 	</nav>
 
 	<!-- 底部: 设置入口 -->
@@ -152,16 +221,12 @@
 		flex-direction: column;
 		background-color: var(--color-bg-secondary);
 		border-right: 1px solid var(--color-border);
-		/* 使用 animations.css 中的过渡变量 */
 		transition: width var(--duration-normal) var(--ease-out);
 		overflow: hidden;
 		flex-shrink: 0;
-		/* GPU 加速优化 */
 		transform: translateZ(0);
 		will-change: width;
-		/* 限制重排影响范围 */
 		contain: layout style;
-		/* 温暖的柔和阴影 */
 		box-shadow: var(--shadow-sm);
 	}
 
@@ -174,8 +239,6 @@
 		justify-content: space-between;
 		padding: var(--space-4);
 		border-bottom: 1px solid var(--color-border);
-		background-color: transparent;
-		/* 温暖的底部渐变 */
 		background-image: linear-gradient(
 			to bottom,
 			transparent 0%,
@@ -200,7 +263,6 @@
 		width: 40px;
 		height: 40px;
 		border-radius: var(--radius-lg);
-		/* 温暖的品牌色渐变背景 */
 		background: linear-gradient(
 			135deg,
 			var(--color-brand-400) 0%,
@@ -225,7 +287,6 @@
 		filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
 	}
 
-	/* Logo 文字 - 温暖友好 */
 	.logo-text {
 		font-family: var(--font-sans);
 		font-size: var(--text-lg);
@@ -233,20 +294,18 @@
 		color: var(--color-fg-primary);
 		white-space: nowrap;
 		letter-spacing: var(--tracking-tight);
-		/* 使用 animations.css 中的过渡变量 */
 		transition: opacity var(--duration-fast) var(--ease-out),
 		            transform var(--duration-fast) var(--ease-out);
 		transform-origin: left center;
 	}
 
-	/* 折叠状态下文字淡出 */
 	.sidebar:not(.expanded) .logo-text {
 		opacity: 0;
 		transform: translateX(-8px);
 	}
 
 	/* ============================================
-	   折叠按钮 - 温暖友好的圆角
+	   折叠按钮
 	   ============================================ */
 	.toggle-btn {
 		display: flex;
@@ -273,24 +332,87 @@
 		transform: scale(0.95);
 	}
 
-	/* 焦点状态 */
 	.toggle-btn:focus-visible {
 		outline: none;
 		box-shadow: 0 0 0 2px var(--color-primary-ring);
 	}
 
 	/* ============================================
-	   Channel 列表区域
+	   新建对话按钮区域
 	   ============================================ */
-	.channel-list {
+	.new-chat-section {
+		padding: var(--space-3) var(--space-4);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.new-chat-btn {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		width: 100%;
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--radius-lg);
+		border: 1px dashed var(--color-border);
+		background: transparent;
+		color: var(--color-fg-secondary);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		text-align: left;
+	}
+
+	.new-chat-btn:hover {
+		border-color: var(--color-brand-400);
+		background-color: var(--color-brand-50);
+		color: var(--color-brand-600);
+	}
+
+	.new-chat-btn:active {
+		transform: scale(0.98);
+	}
+
+	.new-chat-btn:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
+	}
+
+	.btn-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius-md);
+		background-color: var(--color-bg-tertiary);
+		flex-shrink: 0;
+		transition: background-color var(--transition-fast);
+	}
+
+	.new-chat-btn:hover .btn-icon {
+		background-color: var(--color-brand-100);
+	}
+
+	.btn-text {
+		font-family: var(--font-sans);
+		font-size: var(--text-sm);
+		font-weight: 500;
+		white-space: nowrap;
+		transition: opacity var(--transition-fast);
+	}
+
+	/* ============================================
+	   历史记录列表区域
+	   ============================================ */
+	.history-list {
 		flex: 1;
 		overflow-y: auto;
-		padding: var(--space-3);
+		padding: var(--space-2);
 		scrollbar-gutter: stable;
 	}
 
-	/* 区块标题 */
 	.section-title {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		font-family: var(--font-sans);
 		font-size: var(--text-xs);
 		font-weight: 600;
@@ -307,16 +429,42 @@
 		pointer-events: none;
 	}
 
-	/* ============================================
-	   频道项目 - 温暖的交互效果
-	   ============================================ */
-	.channel-item {
+	/* 空状态 */
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-8) var(--space-4);
+		gap: var(--space-2);
+		text-align: center;
+	}
+
+	.empty-icon {
+		font-size: 2rem;
+		opacity: 0.5;
+	}
+
+	.empty-text {
+		font-size: var(--text-sm);
+		color: var(--color-fg-muted);
+	}
+
+	/* 对话列表 */
+	.conversation-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	/* 历史记录项 */
+	.history-item {
 		display: flex;
 		align-items: center;
-		gap: var(--space-3);
 		width: 100%;
 		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius-lg);
+		padding-right: var(--space-8);
+		border-radius: var(--radius-md);
 		border: none;
 		background: transparent;
 		color: var(--color-fg-secondary);
@@ -324,114 +472,123 @@
 		transition: all var(--transition-fast);
 		text-align: left;
 		position: relative;
-		overflow: hidden;
 	}
 
-	/* 温暖的悬停效果 */
-	.channel-item:hover {
+	.history-item:hover {
 		background-color: var(--color-bg-tertiary);
 		color: var(--color-fg-primary);
-		transform: translateX(2px);
 	}
 
-	.channel-item:active {
-		transform: translateX(0) scale(0.98);
-	}
-
-	/* 激活状态 - 品牌色 */
-	.channel-item.active {
+	.history-item.active {
 		background: linear-gradient(
 			135deg,
 			var(--color-brand-500) 0%,
 			var(--color-brand-600) 100%
 		);
 		color: var(--color-fg-inverse);
-		box-shadow: var(--shadow-md),
-		            0 0 0 1px color-mix(in srgb, var(--color-brand-400) 30%, transparent);
+		box-shadow: var(--shadow-sm);
 	}
 
-	.channel-item.active:hover {
-		background: linear-gradient(
-			135deg,
-			var(--color-brand-600) 0%,
-			var(--color-brand-700) 100%
-		);
-		transform: translateX(0);
-	}
-
-	/* 焦点状态 */
-	.channel-item:focus-visible {
+	.history-item:focus-visible {
 		outline: none;
 		box-shadow: 0 0 0 2px var(--color-primary-ring);
 	}
 
-	/* ============================================
-	   频道图标容器
-	   ============================================ */
-	.channel-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border-radius: var(--radius-md);
-		background-color: var(--color-bg-tertiary);
-		flex-shrink: 0;
-		transition: background-color var(--transition-fast),
-		            transform var(--transition-fast);
-	}
-
-	.channel-item:hover .channel-icon {
-		transform: scale(1.05);
-		background-color: var(--color-bg-elevated);
-	}
-
-	.channel-item.active .channel-icon {
-		background-color: color-mix(in srgb, var(--color-fg-inverse) 15%, transparent);
-	}
-
-	/* ============================================
-	   频道名称
-	   ============================================ */
-	.channel-name {
+	.item-content {
 		flex: 1;
-		font-family: var(--font-sans);
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.item-title {
 		font-size: var(--text-sm);
 		font-weight: 500;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		transition: opacity var(--transition-fast);
 	}
 
-	/* ============================================
-	   连接状态指示器 - 温暖的脉动效果
-	   ============================================ */
-	.connection-indicator {
-		width: 10px;
-		height: 10px;
-		border-radius: var(--radius-full);
-		background-color: var(--color-error);
-		flex-shrink: 0;
-		transition: background-color var(--transition-base),
-		            transform var(--transition-fast);
-		position: relative;
+	.item-time {
+		font-size: var(--text-xs);
+		color: var(--color-fg-muted);
 	}
 
-	/* 连接状态 - 成功绿色 + 温暖脉动 */
-	.connection-indicator.connected {
-		background-color: var(--color-success);
-		animation: pulse-glow 2s var(--ease-in-out) infinite;
+	.history-item.active .item-time {
+		color: color-mix(in srgb, var(--color-fg-inverse) 70%, transparent);
 	}
 
-	/* 脉动动画 - 温暖柔和 */
-	@keyframes pulse-glow {
-		0%, 100% {
-			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent);
-		}
-		50% {
-			box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-success) 0%, transparent);
-		}
+	/* 删除按钮 */
+	.delete-btn {
+		position: absolute;
+		right: var(--space-2);
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border: none;
+		border-radius: var(--radius-sm);
+		background-color: transparent;
+		color: var(--color-fg-muted);
+		cursor: pointer;
+		opacity: 0;
+		transition: all var(--transition-fast);
+	}
+
+	.history-item:hover .delete-btn {
+		opacity: 1;
+	}
+
+	.delete-btn:hover {
+		background-color: var(--color-error-bg);
+		color: var(--color-error);
+	}
+
+	.history-item.active .delete-btn {
+		color: color-mix(in srgb, var(--color-fg-inverse) 60%, transparent);
+	}
+
+	.history-item.active .delete-btn:hover {
+		background-color: color-mix(in srgb, var(--color-fg-inverse) 20%, transparent);
+		color: var(--color-fg-inverse);
+	}
+
+	/* 折叠状态的操作按钮 */
+	.collapsed-actions {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2);
+	}
+
+	.collapsed-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-md);
+		border: none;
+		background-color: var(--color-bg-tertiary);
+		color: var(--color-fg-secondary);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.collapsed-btn:hover {
+		background-color: var(--color-bg-elevated);
+		color: var(--color-fg-primary);
+		transform: scale(1.05);
+	}
+
+	.collapsed-btn:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
 	}
 
 	/* ============================================
@@ -440,8 +597,6 @@
 	.sidebar-footer {
 		padding: var(--space-3);
 		border-top: 1px solid var(--color-border);
-		background-color: transparent;
-		/* 温暖的顶部渐变 */
 		background-image: linear-gradient(
 			to top,
 			transparent 0%,
@@ -482,7 +637,6 @@
 		color: var(--color-primary);
 	}
 
-	/* 焦点状态 */
 	.settings-btn:focus-visible {
 		outline: none;
 		box-shadow: 0 0 0 2px var(--color-primary-ring);
@@ -522,33 +676,23 @@
 		pointer-events: none;
 	}
 
-	/* Logo 文字隐藏状态 */
 	.logo-text.hidden {
 		opacity: 0;
 		transform: translateX(-8px);
 	}
 
-	/* 频道名称隐藏状态 */
-	.channel-name.hidden {
+	.btn-text.hidden {
 		opacity: 0;
 		width: 0;
 		padding: 0;
 	}
 
-	/* 设置文字隐藏状态 */
 	.settings-text.hidden {
 		opacity: 0;
 		width: 0;
 		padding: 0;
 	}
 
-	/* 连接状态指示器隐藏状态 */
-	.connection-indicator.hidden {
-		opacity: 0;
-		transform: scale(0);
-	}
-
-	/* 区块标题隐藏状态 */
 	.section-title.hidden {
 		opacity: 0;
 		height: 0;
@@ -557,32 +701,31 @@
 	}
 
 	/* ============================================
-	   滚动条样式 - 温暖色调
+	   滚动条样式
 	   ============================================ */
-	.channel-list::-webkit-scrollbar {
+	.history-list::-webkit-scrollbar {
 		width: 6px;
 	}
 
-	.channel-list::-webkit-scrollbar-track {
+	.history-list::-webkit-scrollbar-track {
 		background: transparent;
 	}
 
-	.channel-list::-webkit-scrollbar-thumb {
+	.history-list::-webkit-scrollbar-thumb {
 		background: var(--color-neutral-300);
 		border-radius: 3px;
 	}
 
-	.channel-list::-webkit-scrollbar-thumb:hover {
+	.history-list::-webkit-scrollbar-thumb:hover {
 		background: var(--color-neutral-400);
 	}
 
-	/* 深色模式滚动条 */
 	@media (prefers-color-scheme: dark) {
-		.channel-list::-webkit-scrollbar-thumb {
+		.history-list::-webkit-scrollbar-thumb {
 			background: var(--color-neutral-600);
 		}
 
-		.channel-list::-webkit-scrollbar-thumb:hover {
+		.history-list::-webkit-scrollbar-thumb:hover {
 			background: var(--color-neutral-500);
 		}
 	}
@@ -594,20 +737,15 @@
 		.sidebar,
 		.logo-icon,
 		.toggle-btn,
-		.channel-item,
-		.channel-icon,
-		.connection-indicator,
+		.new-chat-btn,
+		.history-item,
 		.settings-btn,
 		.settings-icon,
 		.logo-text,
-		.channel-name,
+		.btn-text,
 		.settings-text,
 		.section-title {
 			transition-duration: 0.01ms !important;
-		}
-
-		.connection-indicator.connected {
-			animation: none;
 		}
 	}
 </style>

@@ -37,7 +37,7 @@
 	}: Props = $props();
 
 	// 本地消息状态 - 初始化时复制传入的消息
-	let localMessages = $state<Message[]>([...messages]);
+	let localMessages = $state<Message[]>(messages ? [...messages] : []);
 
 	/** 当前 placeholder 文本 */
 	const placeholderText = $derived(isLoading ? "AI 正在思考..." : "输入消息...");

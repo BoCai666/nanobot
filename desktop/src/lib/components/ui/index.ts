@@ -38,5 +38,8 @@ export { default as MessageInput } from "./MessageInput.svelte";
 export { default as ChatContainer } from "./ChatContainer.svelte";
 export { default as MainContent } from "./MainContent.svelte";
 
+// 帮助组件
+export { default as ShortcutsHelp } from "./ShortcutsHelp.svelte";
+
 // 图标组件
 export * from "./icons/index.js";

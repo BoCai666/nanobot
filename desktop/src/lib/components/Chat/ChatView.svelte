@@ -12,6 +12,7 @@
 	import type { Message } from '$lib/types/message';
 	import { agentAPI } from '$lib/api/agent';
 	import { logUserMessage, logAiResponseStart, logAiDelta, logAiResponseEnd } from '$lib/api/tray';
+	import { logger } from '$lib/utils/logger';
 
 	// Props
 	interface Props {
@@ -198,7 +199,7 @@
 			}
 
 		} catch (error) {
-			console.error('Failed to generate response:', error);
+			logger.error('Failed to generate response:', error);
 
 			// 显示错误状态
 			errorState = {

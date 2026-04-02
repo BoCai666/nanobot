@@ -25,7 +25,7 @@
 	let { thinking, defaultExpanded = false }: Props = $props();
 
 	// 展开状态
-	let expanded = $state(defaultExpanded);
+	let expanded = $state(defaultExpanded ?? false);
 
 	/**
 	 * 切换展开/折叠状态

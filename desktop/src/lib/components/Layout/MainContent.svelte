@@ -1,6 +1,15 @@
 <script lang="ts">
+	/**
+	 * MainContent 组件 - 主内容区域
+	 * 
+	 * 整合标签页系统和聊天视图
+	 * - 支持多标签页切换
+	 * - 标签页与 Channel 联动
+	 */
 	import { currentView, appMode, channels, selectedChannel, setView, setAppModeValue, setChannelConnected, currentChannelName } from '$lib/stores/app';
+	import { tabsStore, type Tab } from '$lib/stores/tabs.svelte';
 	import ChatView from '$lib/components/Chat/ChatView.svelte';
+	import TabBar from '$lib/components/Tabs/TabBar.svelte';
 
 	// 图标组件 - 聊天
 	function MessageIcon({ class: className = '' }: { class?: string }) {
@@ -15,6 +24,26 @@
 			<circle cx="12" cy="12" r="3"/>
 			<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
 		</svg>`;
+	}
+
+	// 当 selectedChannel 变化时，打开对应的标签页
+	$effect(() => {
+		if ($currentView === 'chat' && $selectedChannel) {
+			tabsStore.openChannelTab($selectedChannel);
+		}
+	});
+
+	// 获取当前激活标签页的标题
+	let activeTabTitle = $derived(() => {
+		return tabsStore.activeTab()?.title || $currentChannelName;
+	});
+
+	// 处理标签页切换
+	function handleTabChange(tab: Tab | null) {
+		if (tab) {
+			// 更新 selectedChannel 以保持同步
+			setChannelConnected(tab.channelId, $channels.find(ch => ch.id === tab.channelId)?.connected || false);
+		}
 	}
 </script>
 
