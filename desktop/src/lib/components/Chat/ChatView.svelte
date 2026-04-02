@@ -1,4 +1,12 @@
 <script lang="ts">
+	/**
+	 * ChatView 组件
+	 *
+	 * 温暖亲切的聊天视图，整合消息列表和输入框
+	 * - 温暖的背景渐变和品牌色点缀
+	 * - 精致的微交互动画
+	 * - 使用设计系统的 CSS variables
+	 */
 	import ChatContainer from '$lib/components/ui/ChatContainer.svelte';
 	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import type { Message } from '$lib/types/message';
@@ -227,32 +235,49 @@
 </script>
 
 <div class="chat-view">
-	<div class="chat-header">
-		<h3 class="chat-title">{channelName}</h3>
-		<div class="header-actions">
-			<!-- 连接状态指示器 -->
-			<div class="connection-status" title={connectionStatus === 'connected' ? '已连接到 Gateway' : '未连接'}>
-				<span class="status-dot" class:connected={connectionStatus === 'connected'}></span>
-				<span class="status-text">{connectionStatus === 'connected' ? '已连接' : '离线'}</span>
+	<!-- 温暖的背景装饰 -->
+	<div class="bg-decoration">
+		<div class="warm-glow"></div>
+	</div>
+	
+	<!-- 聊天头部 -->
+	<header class="chat-header">
+		<div class="header-left">
+			<div class="channel-icon">
+				<span class="icon-emoji">💬</span>
 			</div>
+			<div class="channel-info">
+				<h3 class="channel-name">{channelName}</h3>
+				<div class="connection-status" title={connectionStatus === 'connected' ? '已连接到 Gateway' : '未连接'}>
+					<span class="status-dot" class:connected={connectionStatus === 'connected'}></span>
+					<span class="status-text">{connectionStatus === 'connected' ? '已连接' : '离线'}</span>
+				</div>
+			</div>
+		</div>
+		
+		<div class="header-actions">
 			{#if isGenerating}
-				<button class="abort-btn" onclick={handleAbort} title="中断生成">
-					<svg class="abort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<button class="action-btn abort-btn" onclick={handleAbort} title="中断生成">
+					<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
 						<rect x="6" y="6" width="12" height="12" rx="2"/>
 					</svg>
+					<span class="action-label">停止</span>
 				</button>
 			{/if}
 			{#if chatContainerRef && chatContainerRef.getMessages().length > 0}
-				<button class="clear-btn" onclick={clearChat} title="清除对话">
-					<svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<button class="action-btn clear-btn" onclick={clearChat} title="清除对话">
+					<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M3 6h18"/>
 						<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
 						<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
 					</svg>
+					<span class="action-label">清空</span>
 				</button>
 			{/if}
 		</div>
-	</div>
+	</header>
+	
+	<!-- 聊天内容区 -->
 	<div class="chat-content">
 		{#if errorState.hasError}
 			<!-- 错误状态 -->
@@ -278,93 +303,220 @@
 </div>
 
 <style>
+	/* ============================================
+	   主容器 - 温暖背景
+	   ============================================ */
 	.chat-view {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		height: 100%;
 		background-color: var(--color-bg-primary);
+		overflow: hidden;
 	}
 
+	/* 背景装饰 - 温暖光晕 */
+	.bg-decoration {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		pointer-events: none;
+		overflow: hidden;
+		z-index: 0;
+	}
+
+	.warm-glow {
+		position: absolute;
+		top: -120px;
+		right: -80px;
+		width: 300px;
+		height: 300px;
+		background: radial-gradient(
+			circle,
+			var(--color-brand-200) 0%,
+			var(--color-brand-100) 30%,
+			transparent 70%
+		);
+		opacity: 0.6;
+		filter: blur(40px);
+		animation: float-glow 20s ease-in-out infinite;
+	}
+
+	@keyframes float-glow {
+		0%, 100% {
+			transform: translate(0, 0) scale(1);
+			opacity: 0.6;
+		}
+		50% {
+			transform: translate(-20px, 10px) scale(1.1);
+			opacity: 0.4;
+		}
+	}
+
+	/* ============================================
+	   聊天头部 - 温暖精致
+	   ============================================ */
 	.chat-header {
+		position: relative;
+		z-index: 1;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: var(--space-3) var(--space-4);
+		background: linear-gradient(
+			to bottom,
+			var(--color-bg-secondary) 0%,
+			var(--color-bg-primary) 100%
+		);
 		border-bottom: 1px solid var(--color-border);
-		background-color: var(--color-bg-secondary);
+		backdrop-filter: blur(8px);
 	}
 
-	.chat-title {
-		font-size: 1rem;
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+	}
+
+	.channel-icon {
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-lg);
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-400) 0%,
+			var(--color-brand-500) 100%
+		);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 8px -2px var(--color-primary-shadow);
+	}
+
+	.icon-emoji {
+		font-size: var(--text-lg);
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+	}
+
+	.channel-info {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.channel-name {
+		font-size: var(--text-base);
 		font-weight: 600;
-		color: var(--color-text-primary);
+		color: var(--color-fg-primary);
 		margin: 0;
+		line-height: var(--leading-tight);
 	}
 
+	/* 连接状态 */
+	.connection-status {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		padding: 2px var(--space-2);
+		border-radius: var(--radius-sm);
+		background-color: var(--color-bg-tertiary);
+	}
+
+	.status-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background-color: var(--color-error);
+		transition: background-color var(--transition-base);
+	}
+
+	.status-dot.connected {
+		background-color: var(--color-success);
+		animation: pulse-dot 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-dot {
+		0%, 100% {
+			box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+		}
+		50% {
+			box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+		}
+	}
+
+	.status-text {
+		font-size: var(--text-xs);
+		color: var(--color-fg-tertiary);
+		font-weight: 500;
+	}
+
+	/* 头部操作按钮 */
 	.header-actions {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
 	}
 
-	/* 连接状态 */
-	.connection-status {
+	.action-btn {
 		display: flex;
 		align-items: center;
-		gap: var(--space-2);
+		gap: var(--space-1);
 		padding: var(--space-1) var(--space-2);
 		border-radius: var(--radius-md);
-		background-color: var(--color-bg-tertiary);
-	}
-
-	.status-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background-color: var(--color-error);
-	}
-
-	.status-dot.connected {
-		background-color: var(--color-success);
-	}
-
-	.status-text {
-		font-size: 0.75rem;
-		color: var(--color-text-tertiary);
-	}
-
-	.clear-btn,
-	.abort-btn {
-		width: 32px;
-		height: 32px;
-		border-radius: var(--radius-md);
-		border: none;
-		background: transparent;
-		color: var(--color-text-tertiary);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-elevated);
+		color: var(--color-fg-secondary);
 		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 		transition: all var(--transition-fast);
+		box-shadow: var(--shadow-sm);
 	}
 
-	.clear-btn:hover {
-		background-color: var(--color-bg-tertiary);
-		color: var(--color-error);
+	.action-btn:hover {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-md);
 	}
 
-	.abort-btn:hover {
-		background-color: var(--color-bg-tertiary);
+	.action-btn:active {
+		transform: translateY(0) scale(0.98);
+	}
+
+	.action-icon {
+		width: 16px;
+		height: 16px;
+	}
+
+	.action-label {
+		font-size: var(--text-xs);
+		font-weight: 500;
+	}
+
+	.abort-btn {
+		border-color: var(--color-warning);
 		color: var(--color-warning);
 	}
 
-	.clear-icon,
-	.abort-icon {
-		width: 18px;
-		height: 18px;
+	.abort-btn:hover {
+		background: var(--color-warning-bg);
+		border-color: var(--color-warning);
+		color: var(--color-warning-dark);
 	}
 
+	.clear-btn:hover {
+		border-color: var(--color-error);
+		color: var(--color-error);
+		background: var(--color-error-bg);
+	}
+
+	/* ============================================
+	   聊天内容区
+	   ============================================ */
 	.chat-content {
+		position: relative;
+		z-index: 1;
 		flex: 1;
 		overflow: hidden;
 	}
@@ -379,10 +531,42 @@
 		background-color: var(--color-bg-primary);
 	}
 
-	/* 响应 prefers-reduced-motion */
+	/* ============================================
+	   响应式适配
+	   ============================================ */
+	@media (max-width: 640px) {
+		.chat-header {
+			padding: var(--space-2) var(--space-3);
+		}
+
+		.channel-icon {
+			width: 36px;
+			height: 36px;
+		}
+
+		.action-label {
+			display: none;
+		}
+
+		.action-btn {
+			padding: var(--space-2);
+		}
+	}
+
+	/* ============================================
+	   Reduced Motion 支持
+	   ============================================ */
 	@media (prefers-reduced-motion: reduce) {
 		.status-dot.connected {
 			animation: none;
+		}
+
+		.warm-glow {
+			animation: none;
+		}
+
+		.action-btn {
+			transition: none;
 		}
 	}
 </style>

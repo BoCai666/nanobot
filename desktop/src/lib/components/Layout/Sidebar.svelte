@@ -22,7 +22,7 @@
 		</svg>`;
 	}
 
-	// 图标组件 - Feishu (使用通用消息图标)
+	// 图标组件 - Feishu
 	function FeishuIcon({ class: className = '' }: { class?: string }) {
 		return `<svg class="${className}" viewBox="0 0 24 24" fill="currentColor">
 			<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
@@ -81,7 +81,9 @@
 	<!-- 头部: Logo 和折叠按钮 -->
 	<div class="sidebar-header">
 		<div class="logo">
-			<span class="logo-icon">🤖</span>
+			<div class="logo-icon">
+				<span class="logo-emoji">🤖</span>
+			</div>
 			<span class="logo-text" class:hidden={!$sidebarExpanded}>nanobot</span>
 		</div>
 		<button
@@ -142,14 +144,16 @@
 </aside>
 
 <style>
-	/* 侧边栏容器 - 温暖柔和背景 */
+	/* ============================================
+	   侧边栏容器 - 温暖柔和背景
+	   ============================================ */
 	.sidebar {
 		display: flex;
 		flex-direction: column;
 		background-color: var(--color-bg-secondary);
 		border-right: 1px solid var(--color-border);
-		transition: width var(--duration-base) var(--ease-out),
-		            background-color var(--duration-base) var(--ease-out);
+		/* 使用 animations.css 中的过渡变量 */
+		transition: width var(--duration-normal) var(--ease-out);
 		overflow: hidden;
 		flex-shrink: 0;
 		/* GPU 加速优化 */
@@ -157,9 +161,13 @@
 		will-change: width;
 		/* 限制重排影响范围 */
 		contain: layout style;
+		/* 温暖的柔和阴影 */
+		box-shadow: var(--shadow-sm);
 	}
 
-	/* 头部区域 */
+	/* ============================================
+	   头部区域
+	   ============================================ */
 	.sidebar-header {
 		display: flex;
 		align-items: center;
@@ -167,35 +175,67 @@
 		padding: var(--space-4);
 		border-bottom: 1px solid var(--color-border);
 		background-color: transparent;
+		/* 温暖的底部渐变 */
+		background-image: linear-gradient(
+			to bottom,
+			transparent 0%,
+			var(--color-bg-overlay) 100%
+		);
 	}
 
-	/* Logo 区域 - 使用 Lato 字体 */
+	/* ============================================
+	   Logo 区域
+	   ============================================ */
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: var(--space-2);
+		gap: var(--space-3);
 		overflow: hidden;
 	}
 
 	.logo-icon {
-		font-size: 1.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-lg);
+		/* 温暖的品牌色渐变背景 */
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-400) 0%,
+			var(--color-brand-500) 50%,
+			var(--color-brand-600) 100%
+		);
+		box-shadow: var(--shadow-md),
+		            0 0 0 1px color-mix(in srgb, var(--color-brand-300) 30%, transparent);
 		flex-shrink: 0;
-		transition: transform var(--transition-fast);
+		transition: transform var(--transition-fast),
+		            box-shadow var(--transition-fast);
 	}
 
 	.logo:hover .logo-icon {
 		transform: scale(1.05);
+		box-shadow: var(--shadow-lg),
+		            0 0 0 1px color-mix(in srgb, var(--color-brand-300) 50%, transparent);
 	}
 
-	/* Logo 文字 - Lato 字体，温暖友好 */
+	.logo-emoji {
+		font-size: 1.375rem;
+		filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+	}
+
+	/* Logo 文字 - 温暖友好 */
 	.logo-text {
-		font-family: var(--font-sans); /* Lato */
-		font-size: 1.125rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
+		font-family: var(--font-sans);
+		font-size: var(--text-lg);
+		font-weight: 700;
+		color: var(--color-fg-primary);
 		white-space: nowrap;
-		letter-spacing: var(--tracking-normal);
-		transition: opacity var(--transition-fast), transform var(--transition-fast);
+		letter-spacing: var(--tracking-tight);
+		/* 使用 animations.css 中的过渡变量 */
+		transition: opacity var(--duration-fast) var(--ease-out),
+		            transform var(--duration-fast) var(--ease-out);
 		transform-origin: left center;
 	}
 
@@ -205,7 +245,9 @@
 		transform: translateX(-8px);
 	}
 
-	/* 折叠按钮 - 友好圆角 */
+	/* ============================================
+	   折叠按钮 - 温暖友好的圆角
+	   ============================================ */
 	.toggle-btn {
 		display: flex;
 		align-items: center;
@@ -215,7 +257,7 @@
 		border-radius: var(--radius-md);
 		border: none;
 		background: transparent;
-		color: var(--color-text-secondary);
+		color: var(--color-fg-tertiary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		flex-shrink: 0;
@@ -223,7 +265,7 @@
 
 	.toggle-btn:hover {
 		background-color: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
+		color: var(--color-fg-primary);
 		transform: scale(1.05);
 	}
 
@@ -231,7 +273,15 @@
 		transform: scale(0.95);
 	}
 
-	/* Channel 列表区域 */
+	/* 焦点状态 */
+	.toggle-btn:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
+	}
+
+	/* ============================================
+	   Channel 列表区域
+	   ============================================ */
 	.channel-list {
 		flex: 1;
 		overflow-y: auto;
@@ -246,8 +296,8 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-wider);
-		color: var(--color-text-tertiary);
-		padding: var(--space-2) var(--space-2) var(--space-3);
+		color: var(--color-fg-tertiary);
+		padding: var(--space-2) var(--space-3) var(--space-3);
 		white-space: nowrap;
 		transition: opacity var(--transition-fast);
 	}
@@ -257,7 +307,9 @@
 		pointer-events: none;
 	}
 
-	/* 频道项目 - 友好圆角和交互 */
+	/* ============================================
+	   频道项目 - 温暖的交互效果
+	   ============================================ */
 	.channel-item {
 		display: flex;
 		align-items: center;
@@ -267,7 +319,7 @@
 		border-radius: var(--radius-lg);
 		border: none;
 		background: transparent;
-		color: var(--color-text-secondary);
+		color: var(--color-fg-secondary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		text-align: left;
@@ -275,9 +327,10 @@
 		overflow: hidden;
 	}
 
+	/* 温暖的悬停效果 */
 	.channel-item:hover {
 		background-color: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
+		color: var(--color-fg-primary);
 		transform: translateX(2px);
 	}
 
@@ -285,18 +338,36 @@
 		transform: translateX(0) scale(0.98);
 	}
 
+	/* 激活状态 - 品牌色 */
 	.channel-item.active {
-		background-color: var(--color-primary);
-		color: var(--color-text-inverse);
-		box-shadow: var(--shadow-md);
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-500) 0%,
+			var(--color-brand-600) 100%
+		);
+		color: var(--color-fg-inverse);
+		box-shadow: var(--shadow-md),
+		            0 0 0 1px color-mix(in srgb, var(--color-brand-400) 30%, transparent);
 	}
 
 	.channel-item.active:hover {
-		background-color: var(--color-primary-dark);
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-600) 0%,
+			var(--color-brand-700) 100%
+		);
 		transform: translateX(0);
 	}
 
-	/* 频道图标容器 */
+	/* 焦点状态 */
+	.channel-item:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
+	}
+
+	/* ============================================
+	   频道图标容器
+	   ============================================ */
 	.channel-icon {
 		display: flex;
 		align-items: center;
@@ -306,18 +377,22 @@
 		border-radius: var(--radius-md);
 		background-color: var(--color-bg-tertiary);
 		flex-shrink: 0;
-		transition: background-color var(--transition-fast), transform var(--transition-fast);
+		transition: background-color var(--transition-fast),
+		            transform var(--transition-fast);
 	}
 
 	.channel-item:hover .channel-icon {
 		transform: scale(1.05);
+		background-color: var(--color-bg-elevated);
 	}
 
 	.channel-item.active .channel-icon {
-		background-color: color-mix(in srgb, var(--color-text-inverse) 20%, transparent);
+		background-color: color-mix(in srgb, var(--color-fg-inverse) 15%, transparent);
 	}
 
-	/* 频道名称 - 带过渡动画 */
+	/* ============================================
+	   频道名称
+	   ============================================ */
 	.channel-name {
 		flex: 1;
 		font-family: var(--font-sans);
@@ -329,41 +404,54 @@
 		transition: opacity var(--transition-fast);
 	}
 
-	/* 连接状态指示器 - 更明显，使用语义色 */
+	/* ============================================
+	   连接状态指示器 - 温暖的脉动效果
+	   ============================================ */
 	.connection-indicator {
 		width: 10px;
 		height: 10px;
-		border-radius: 50%;
+		border-radius: var(--radius-full);
 		background-color: var(--color-error);
 		flex-shrink: 0;
-		transition: background-color var(--transition-base), transform var(--transition-fast);
+		transition: background-color var(--transition-base),
+		            transform var(--transition-fast);
 		position: relative;
 	}
 
-	/* 连接状态 - 成功绿色 + 微妙脉动 */
+	/* 连接状态 - 成功绿色 + 温暖脉动 */
 	.connection-indicator.connected {
 		background-color: var(--color-success);
-		animation: pulse-glow 2s ease-in-out infinite;
+		animation: pulse-glow 2s var(--ease-in-out) infinite;
 	}
 
-	/* 脉动动画 */
+	/* 脉动动画 - 温暖柔和 */
 	@keyframes pulse-glow {
 		0%, 100% {
 			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent);
 		}
 		50% {
-			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-success) 0%, transparent);
+			box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-success) 0%, transparent);
 		}
 	}
 
-	/* 底部区域 */
+	/* ============================================
+	   底部区域
+	   ============================================ */
 	.sidebar-footer {
 		padding: var(--space-3);
 		border-top: 1px solid var(--color-border);
 		background-color: transparent;
+		/* 温暖的顶部渐变 */
+		background-image: linear-gradient(
+			to top,
+			transparent 0%,
+			var(--color-bg-overlay) 100%
+		);
 	}
 
-	/* 设置按钮 - 与频道项目风格一致 */
+	/* ============================================
+	   设置按钮
+	   ============================================ */
 	.settings-btn {
 		display: flex;
 		align-items: center;
@@ -373,7 +461,7 @@
 		border-radius: var(--radius-lg);
 		border: none;
 		background: transparent;
-		color: var(--color-text-secondary);
+		color: var(--color-fg-secondary);
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		text-align: left;
@@ -381,7 +469,7 @@
 
 	.settings-btn:hover {
 		background-color: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
+		color: var(--color-fg-primary);
 		transform: translateX(2px);
 	}
 
@@ -394,6 +482,12 @@
 		color: var(--color-primary);
 	}
 
+	/* 焦点状态 */
+	.settings-btn:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--color-primary-ring);
+	}
+
 	.settings-icon {
 		display: flex;
 		align-items: center;
@@ -401,12 +495,15 @@
 		width: 36px;
 		height: 36px;
 		border-radius: var(--radius-md);
+		background-color: var(--color-bg-tertiary);
 		flex-shrink: 0;
-		transition: transform var(--transition-fast);
+		transition: transform var(--transition-fast),
+		            background-color var(--transition-fast);
 	}
 
 	.settings-btn:hover .settings-icon {
 		transform: rotate(15deg);
+		background-color: var(--color-bg-elevated);
 	}
 
 	.settings-text {
@@ -417,7 +514,9 @@
 		transition: opacity var(--transition-fast);
 	}
 
-	/* 通用隐藏类 - 配合 class:hidden 指令 */
+	/* ============================================
+	   通用隐藏类
+	   ============================================ */
 	.hidden {
 		opacity: 0;
 		pointer-events: none;
@@ -457,7 +556,9 @@
 		overflow: hidden;
 	}
 
-	/* 滚动条样式 - 温暖色调 */
+	/* ============================================
+	   滚动条样式 - 温暖色调
+	   ============================================ */
 	.channel-list::-webkit-scrollbar {
 		width: 6px;
 	}
@@ -483,6 +584,30 @@
 
 		.channel-list::-webkit-scrollbar-thumb:hover {
 			background: var(--color-neutral-500);
+		}
+	}
+
+	/* ============================================
+	   Reduced Motion 支持
+	   ============================================ */
+	@media (prefers-reduced-motion: reduce) {
+		.sidebar,
+		.logo-icon,
+		.toggle-btn,
+		.channel-item,
+		.channel-icon,
+		.connection-indicator,
+		.settings-btn,
+		.settings-icon,
+		.logo-text,
+		.channel-name,
+		.settings-text,
+		.section-title {
+			transition-duration: 0.01ms !important;
+		}
+
+		.connection-indicator.connected {
+			animation: none;
 		}
 	}
 </style>

@@ -119,27 +119,42 @@
 				</div>
 			</div>
 		{:else}
-			<!-- 空状态 - 友好欢迎引导界面 -->
+			<!-- 空状态 - 温暖欢迎界面 -->
 			<div class="empty-state">
-				<div class="empty-icon">💬</div>
+				<div class="empty-icon-wrapper">
+					<span class="empty-icon">💬</span>
+				</div>
 				<h3 class="empty-title">开始对话</h3>
 				<p class="empty-text">向 AI 助手提问，获取帮助、创意灵感或技术支持</p>
+				<div class="empty-suggestions">
+					<div class="suggestion-chip">✨ 写一段代码</div>
+					<div class="suggestion-chip">📝 总结文章</div>
+					<div class="suggestion-chip">🤔 解答问题</div>
+				</div>
 				<p class="empty-hint">在下方输入框中输入您的问题</p>
 			</div>
 		{/if}
 	{:else}
 		<div class="messages-container">
-			{#each messages as message (message.id)}
+			{#each messages as message, index (message.id)}
 				<div
 					class="message"
 					class:user={message.role === 'user'}
 					class:assistant={message.role === 'assistant'}
+					style="animation-delay: {Math.min(index * 30, 150)}ms"
 				>
 					<div class="message-avatar">
 						{#if message.role === 'user'}
 							<div class="avatar user-avatar">我</div>
 						{:else}
-							<div class="avatar assistant-avatar">🤖</div>
+							<div class="avatar assistant-avatar">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="assistant-icon">
+									<path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+									<circle cx="9" cy="13" r="1"/>
+									<circle cx="15" cy="13" r="1"/>
+									<path d="M9 17h6"/>
+								</svg>
+							</div>
 						{/if}
 					</div>
 					<div class="message-content">
@@ -166,64 +181,139 @@
 	.message-list {
 		flex: 1;
 		overflow-y: auto;
+		overflow-x: hidden;
 		padding: var(--space-4);
 		scroll-behavior: smooth;
+		/* 平滑滚动优化 */
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-neutral-300) transparent;
 	}
 
-	/* 空状态 - 友好欢迎引导界面 */
+	/* 自定义滚动条 */
+	.message-list::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.message-list::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.message-list::-webkit-scrollbar-thumb {
+		background-color: var(--color-neutral-300);
+		border-radius: var(--radius-full);
+		transition: background-color var(--transition-fast);
+	}
+
+	.message-list::-webkit-scrollbar-thumb:hover {
+		background-color: var(--color-neutral-400);
+	}
+
+	/* ============================================
+	   空状态 - 温暖欢迎界面
+	   ============================================ */
 	.empty-state {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		height: 100%;
-		min-height: 300px;
+		min-height: 320px;
 		text-align: center;
-		padding: var(--space-8);
-		animation: fadeIn var(--transition-slow);
+		padding: var(--space-6);
+		animation: fadeIn var(--duration-slow) var(--ease-out);
+	}
+
+	.empty-icon-wrapper {
+		position: relative;
+		margin-bottom: var(--space-5);
+	}
+
+	.empty-icon-wrapper::before {
+		content: '';
+		position: absolute;
+		inset: -12px;
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-100) 0%,
+			var(--color-brand-200) 50%,
+			var(--color-brand-100) 100%
+		);
+		border-radius: var(--radius-2xl);
+		opacity: 0.6;
+		animation: pulse-glow var(--duration-pulse) var(--ease-in-out) infinite;
 	}
 
 	.empty-icon {
-		font-size: 4rem;
-		margin-bottom: var(--space-5);
-		opacity: 0.6;
+		position: relative;
+		font-size: 3.5rem;
 		filter: drop-shadow(0 2px 8px var(--color-warm-shadow));
 	}
 
 	.empty-title {
 		font-size: var(--text-h3);
 		font-weight: 600;
-		color: var(--color-text-primary);
-		margin-bottom: var(--space-2);
+		color: var(--color-fg-primary);
+		margin: 0 0 var(--space-2);
 		line-height: var(--leading-snug);
+		letter-spacing: var(--tracking-tight);
 	}
 
 	.empty-text {
 		font-size: var(--text-base);
-		font-weight: 500;
-		color: var(--color-text-secondary);
-		margin-bottom: var(--space-6);
+		font-weight: 450;
+		color: var(--color-fg-secondary);
+		margin: 0 0 var(--space-5);
 		line-height: var(--leading-relaxed);
-		max-width: 320px;
+		max-width: 280px;
+	}
+
+	.empty-suggestions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		justify-content: center;
+		margin-bottom: var(--space-5);
+	}
+
+	.suggestion-chip {
+		padding: var(--space-2) var(--space-3);
+		background-color: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		font-size: var(--text-sm);
+		color: var(--color-fg-secondary);
+		transition: all var(--transition-fast);
+		cursor: default;
+	}
+
+	.suggestion-chip:hover {
+		background-color: var(--color-bg-tertiary);
+		border-color: var(--color-brand-300);
+		color: var(--color-fg-primary);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.empty-hint {
-		font-size: var(--text-sm);
-		color: var(--color-text-tertiary);
-		padding: var(--space-3) var(--space-4);
+		font-size: var(--text-xs);
+		color: var(--color-fg-tertiary);
+		padding: var(--space-2) var(--space-3);
 		background-color: var(--color-bg-secondary);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
 		line-height: var(--leading-normal);
+		margin: 0;
 	}
 
-	/* 加载状态骨架屏 */
+	/* ============================================
+	   加载状态骨架屏
+	   ============================================ */
 	.loading-skeleton-container {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-5);
 		padding: var(--space-6);
-		animation: fadeIn var(--transition-base);
+		animation: fadeIn var(--duration-normal) var(--ease-out);
 	}
 
 	.skeleton-message {
@@ -237,17 +327,17 @@
 
 	.skeleton-avatar {
 		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
+		width: 36px;
+		height: 36px;
 		border-radius: var(--radius-lg);
 		background: linear-gradient(
 			90deg,
-			var(--color-bg-tertiary) 0%,
+			var(--color-neutral-100) 0%,
 			var(--color-bg-secondary) 50%,
-			var(--color-bg-tertiary) 100%
+			var(--color-neutral-100) 100%
 		);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
+		animation: skeleton-shimmer var(--duration-shimmer) linear infinite;
 	}
 
 	.skeleton-content {
@@ -263,17 +353,17 @@
 		border-radius: var(--radius-sm);
 		background: linear-gradient(
 			90deg,
-			var(--color-bg-tertiary) 0%,
+			var(--color-neutral-100) 0%,
 			var(--color-bg-secondary) 50%,
-			var(--color-bg-tertiary) 100%
+			var(--color-neutral-100) 100%
 		);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
+		animation: skeleton-shimmer var(--duration-shimmer) linear infinite;
 	}
 
 	.skeleton-title {
 		width: 30%;
-		height: 18px;
+		height: 16px;
 	}
 
 	.skeleton-text {
@@ -281,34 +371,34 @@
 	}
 
 	.skeleton-text-short {
-		width: 70%;
+		width: 65%;
 	}
 
-	@keyframes shimmer {
-		0% {
-			background-position: -200% 0;
-		}
-		100% {
-			background-position: 200% 0;
-		}
-	}
-
+	/* ============================================
+	   消息容器
+	   ============================================ */
 	.messages-container {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
 	}
 
+	/* ============================================
+	   消息项
+	   ============================================ */
 	.message {
 		display: flex;
 		gap: var(--space-3);
-		animation: fadeIn 0.3s ease;
+		animation: fadeInUp var(--duration-normal) var(--ease-out) both;
 	}
 
 	.message.user {
 		flex-direction: row-reverse;
 	}
 
+	/* ============================================
+	   头像
+	   ============================================ */
 	.message-avatar {
 		flex-shrink: 0;
 	}
@@ -316,32 +406,49 @@
 	.avatar {
 		width: 36px;
 		height: 36px;
-		border-radius: 50%;
+		border-radius: var(--radius-lg);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-size: var(--text-sm);
-		font-weight: 500;
-		transition: transform var(--transition-fast);
+		font-weight: 600;
+		transition: transform var(--transition-fast),
+		            box-shadow var(--transition-fast);
 	}
 
 	.user-avatar {
-		background-color: var(--user-bubble);
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-500) 0%,
+			var(--color-brand-600) 100%
+		);
 		color: var(--user-bubble-foreground);
+		box-shadow: 0 2px 8px var(--color-primary-shadow);
 	}
 
 	.user-avatar:hover {
 		transform: scale(1.05);
+		box-shadow: 0 4px 12px var(--color-primary-shadow-hover);
 	}
 
 	.assistant-avatar {
 		background-color: var(--color-bg-tertiary);
-		font-size: var(--text-lg);
+		border: 1px solid var(--color-border);
+		color: var(--color-fg-secondary);
 	}
 
+	.assistant-icon {
+		width: 20px;
+		height: 20px;
+	}
+
+	/* ============================================
+	   消息内容区
+	   ============================================ */
 	.message-content {
 		flex: 1;
-		max-width: calc(100% - 60px);
+		max-width: calc(100% - 56px);
+		min-width: 80px;
 	}
 
 	.message.user .message-content {
@@ -355,6 +462,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		margin-bottom: var(--space-1);
+		padding: 0 var(--space-1);
 	}
 
 	.message.user .message-header {
@@ -364,24 +472,28 @@
 	.message-role {
 		font-size: var(--text-xs);
 		font-weight: 500;
-		color: var(--color-text-secondary);
+		color: var(--color-fg-secondary);
+		letter-spacing: var(--tracking-wide);
 	}
 
 	.message-time {
 		font-size: var(--text-xs);
-		color: var(--color-text-tertiary);
+		color: var(--color-fg-tertiary);
 	}
 
-	/* 消息气泡样式 - 温暖友好设计 */
+	/* ============================================
+	   消息气泡 - 温暖圆润设计
+	   ============================================ */
 	.message-body {
 		padding: var(--space-3) var(--space-4);
-		border-radius: var(--radius-xl); /* 18px - 温暖圆润感 */
+		border-radius: var(--radius-xl);
 		font-size: var(--text-base);
 		line-height: var(--leading-relaxed);
 		word-wrap: break-word;
 		overflow-wrap: break-word;
 		box-shadow: var(--shadow-sm);
-		transition: box-shadow var(--transition-fast);
+		transition: box-shadow var(--transition-fast),
+		            transform var(--transition-fast);
 	}
 
 	/* AI 消息气泡 - 柔和背景 */
@@ -389,20 +501,35 @@
 		background-color: var(--ai-bubble);
 		color: var(--ai-bubble-foreground);
 		border: 1px solid var(--color-border);
+		border-radius: var(--radius-xl);
+		border-top-left-radius: var(--radius-sm);
 	}
 
-	/* 用户消息气泡 - 温暖主色调 */
-	.message.user .message-body {
-		background-color: var(--user-bubble);
-		color: var(--user-bubble-foreground);
-		border: 1px solid transparent;
-	}
-
-	.message.user .message-body:hover {
+	.message.assistant .message-body:hover {
 		box-shadow: var(--shadow-md);
 	}
 
-	/* Markdown 样式 */
+	/* 用户消息气泡 - 温暖主色调渐变 */
+	.message.user .message-body {
+		background: linear-gradient(
+			135deg,
+			var(--color-brand-500) 0%,
+			var(--color-brand-600) 100%
+		);
+		color: var(--user-bubble-foreground);
+		border: none;
+		border-top-right-radius: var(--radius-sm);
+		box-shadow: 0 2px 8px var(--color-primary-shadow);
+	}
+
+	.message.user .message-body:hover {
+		box-shadow: 0 4px 12px var(--color-primary-shadow-hover);
+		transform: translateY(-1px);
+	}
+
+	/* ============================================
+	   Markdown 样式
+	   ============================================ */
 	.message-body :global(.md-paragraph) {
 		margin: 0 0 var(--space-2) 0;
 	}
@@ -433,7 +560,7 @@
 		font-size: var(--text-base);
 	}
 
-	/* 代码块 - 使用设计系统变量 */
+	/* 代码块 */
 	.message-body :global(.code-block) {
 		background-color: var(--code-bg);
 		border: 1px solid var(--code-border);
@@ -479,14 +606,14 @@
 
 	/* 链接样式 */
 	.message-body :global(a) {
-		color: var(--color-primary);
+		color: var(--color-brand-500);
 		text-decoration: none;
 		border-bottom: 1px solid transparent;
 		transition: all var(--transition-fast);
 	}
 
 	.message-body :global(a:hover) {
-		border-bottom-color: var(--color-primary);
+		border-bottom-color: var(--color-brand-500);
 	}
 
 	/* 用户消息中的链接 */
@@ -511,7 +638,11 @@
 		content: '•';
 		position: absolute;
 		left: var(--space-1);
-		color: var(--color-text-tertiary);
+		color: var(--color-fg-tertiary);
+	}
+
+	.message.user .message-body :global(.list-item::before) {
+		color: var(--user-bubble-overlay-40);
 	}
 
 	.message-body :global(.list-item.ordered::before) {
@@ -526,12 +657,16 @@
 		margin: var(--space-3) 0;
 	}
 
+	.message.user .message-body :global(.md-hr) {
+		border-top-color: var(--user-bubble-overlay-25);
+	}
+
 	/* 引用块 */
 	.message-body :global(.md-quote) {
-		border-left: 3px solid var(--color-primary);
+		border-left: 3px solid var(--color-brand-400);
 		padding-left: var(--space-3);
 		margin: var(--space-2) 0;
-		color: var(--color-text-secondary);
+		color: var(--color-fg-secondary);
 		font-style: italic;
 	}
 
@@ -540,7 +675,9 @@
 		color: var(--user-bubble-overlay-90);
 	}
 
-	/* 流式响应光标 - 柔和脉冲动画 */
+	/* ============================================
+	   流式响应光标
+	   ============================================ */
 	.streaming-cursor {
 		display: inline-block;
 		width: 2px;
@@ -549,33 +686,96 @@
 		margin-left: 2px;
 		vertical-align: text-bottom;
 		border-radius: 1px;
-		animation: pulse-cursor var(--transition-slow) ease-in-out infinite;
+		animation: pulse-soft var(--duration-pulse) var(--ease-in-out) infinite;
 	}
 
 	.message.user .streaming-cursor {
 		background-color: var(--user-bubble-foreground);
 	}
 
-	/* 柔和脉冲动画 */
-	@keyframes pulse-cursor {
-		0%, 100% {
-			opacity: 1;
-			transform: scaleY(1);
-		}
-		50% {
-			opacity: 0.3;
-			transform: scaleY(0.9);
-		}
-	}
-
+	/* ============================================
+	   动画关键帧
+	   ============================================ */
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
-			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
 		}
 		to {
 			opacity: 1;
 			transform: translateY(0);
+		}
+	}
+
+	@keyframes skeleton-shimmer {
+		0% {
+			background-position: -200% 0;
+		}
+		100% {
+			background-position: 200% 0;
+		}
+	}
+
+	@keyframes pulse-soft {
+		0%, 100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.4;
+			transform: scale(0.98);
+		}
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			opacity: 0.5;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.7;
+			transform: scale(1.02);
+		}
+	}
+
+	/* ============================================
+	   Reduced Motion 支持
+	   ============================================ */
+	@media (prefers-reduced-motion: reduce) {
+		.message {
+			animation: none;
+		}
+
+		.empty-state {
+			animation: none;
+		}
+
+		.empty-icon-wrapper::before {
+			animation: none;
+		}
+
+		.streaming-cursor {
+			animation: none;
+			opacity: 1;
+		}
+
+		.skeleton-avatar,
+		.skeleton-line {
+			animation: none;
+			background: var(--color-neutral-100);
+		}
+
+		.message.user .message-body:hover {
+			transform: none;
 		}
 	}
 </style>

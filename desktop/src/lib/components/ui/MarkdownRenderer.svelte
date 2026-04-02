@@ -451,13 +451,26 @@
 		}
 	}
 
-	/* 暗色模式适配 */
-	:global(.dark) .markdown-content :global(pre) {
-		background-color: var(--code-header-bg);
+	/* 暗色模式适配 - 保持温暖暗色调一致性 */
+	:global(.dark) .markdown-content :global(pre),
+	:global([data-theme="dark"]) .markdown-content :global(pre) {
+		background-color: var(--code-bg);
+		border: 1px solid var(--code-border);
 	}
 
-	:global(.dark) .markdown-content :global(code:not(pre code)) {
+	:global(.dark) .markdown-content :global(code:not(pre code)),
+	:global([data-theme="dark"]) .markdown-content :global(code:not(pre code)) {
 		background-color: var(--color-bg-tertiary);
+		color: var(--code-highlight);
+	}
+
+	/* 代码块语法高亮优化 - 使用温暖的强调色 */
+	.markdown-content :global(.shiki .highlight) {
+		color: var(--code-highlight);
+	}
+
+	.markdown-content :global(.shiki .muted) {
+		color: var(--code-muted);
 	}
 
 	/* 响应式 */

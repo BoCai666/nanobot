@@ -1,4 +1,9 @@
 <script lang="ts">
+	/**
+	 * MessageInput 组件
+	 * 温暖亲切的消息输入框，支持自动高度调整和多行输入
+	 */
+
 	// Props
 	interface Props {
 		disabled?: boolean;
@@ -62,18 +67,17 @@
 </script>
 
 <div class="message-input-container">
-	<div class="input-wrapper">
+	<div class="input-wrapper" class:disabled>
 		<textarea
 			bind:this={textareaElement}
 			class="message-textarea"
-			class:disabled
 			{placeholder}
 			value={inputText}
 			oninput={handleInput}
 			onkeydown={handleKeyDown}
 			rows="1"
 			maxlength={maxChars}
-			disabled={disabled}
+			{disabled}
 		></textarea>
 		<div class="input-actions">
 			<span class="char-count" class:near-limit={charCount > maxChars * 0.9}>
@@ -85,6 +89,7 @@
 				onclick={handleSend}
 				disabled={!canSend}
 				title="Ctrl+Enter 发送"
+				aria-label="发送消息"
 			>
 				<svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<path d="m22 2-7 20-4-9-9-4 20-7z"/>
@@ -99,27 +104,36 @@
 
 <style>
 	.message-input-container {
-		padding: var(--space-4);
-		background-color: var(--color-bg-primary);
-		border-top: 1px solid var(--color-border);
+		padding: 1rem;
+		background-color: var(--color-bg-primary, #FFFCFA);
+		border-top: 1px solid var(--color-border, #F0E6E0);
 	}
 
 	.input-wrapper {
 		display: flex;
-		gap: var(--space-3);
+		gap: 0.75rem;
 		align-items: flex-end;
-		background-color: var(--color-bg-tertiary);
-		border: 1.5px solid transparent;
-		border-radius: var(--radius-xl);
-		padding: var(--space-3) var(--space-4);
-		transition: all var(--transition-base);
-		box-shadow: var(--shadow-sm);
+		background-color: var(--color-bg-elevated, #FFFFFF);
+		border: 1px solid var(--color-border, #F0E6E0);
+		border-radius: var(--radius-xl, 1rem);
+		padding: 0.75rem 1rem;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+		box-shadow: var(--shadow-sm, 0 1px 3px -1px rgba(55, 53, 47, 0.04));
 	}
 
+	/* Focus 状态 - 温暖的橙色光晕 */
 	.input-wrapper:focus-within {
-		border-color: var(--color-primary);
-		background-color: var(--color-bg-secondary);
-		box-shadow: var(--shadow-md), 0 0 0 3px var(--color-primary-ring);
+		border-color: var(--color-border-focus, #FFB38A);
+		background-color: var(--color-bg-elevated, #FFFFFF);
+		box-shadow: 
+			0 0 0 3px var(--color-primary-ring, rgba(255, 107, 53, 0.15)),
+			0 1px 3px rgba(0, 0, 0, 0.05);
+	}
+
+	.input-wrapper.disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		background-color: var(--color-bg-secondary, #FFF8F5);
 	}
 
 	.message-textarea {
@@ -127,75 +141,75 @@
 		resize: none;
 		border: none;
 		background: transparent;
-		color: var(--color-text-primary);
-		font-size: var(--text-base);
-		line-height: var(--leading-relaxed);
-		min-height: 24px;
-		max-height: 200px;
+		color: var(--color-fg-primary, #1F1A17);
+		font-size: 0.875rem;
+		line-height: 1.5;
+		min-height: 1.5rem;
+		max-height: 12.5rem;
 		padding: 0;
 		outline: none;
-		font-family: var(--font-sans);
+		font-family: inherit;
 	}
 
 	.message-textarea::placeholder {
-		color: var(--color-text-tertiary);
-		opacity: 0.8;
+		color: var(--color-fg-muted, #A9A5A2);
+		opacity: 1;
 	}
 
-	.message-textarea.disabled {
-		opacity: 0.5;
+	.message-textarea:disabled {
 		cursor: not-allowed;
 	}
 
 	.input-actions {
 		display: flex;
 		align-items: center;
-		gap: var(--space-3);
+		gap: 0.75rem;
 		flex-shrink: 0;
 	}
 
 	.char-count {
-		font-size: var(--text-xs);
-		color: var(--color-text-tertiary);
+		font-size: 0.75rem;
+		color: var(--color-fg-tertiary, #8A8380);
 		white-space: nowrap;
 		opacity: 0.7;
-		transition: opacity var(--transition-fast);
+		transition: opacity 0.15s ease, color 0.15s ease;
 	}
 
 	.char-count.near-limit {
-		color: var(--color-warning);
+		color: var(--color-warning, #F59E0B);
 		opacity: 1;
 		font-weight: 500;
 	}
 
+	/* 发送按钮 - 品牌色 */
 	.send-btn {
-		width: 40px;
-		height: 40px;
-		border-radius: var(--radius-xl);
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: var(--radius-lg, 0.875rem);
 		border: none;
-		background-color: var(--color-primary);
-		color: var(--color-text-inverse);
+		background-color: var(--color-primary, #FF6B35);
+		color: var(--color-fg-inverse, #FFFCFA);
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all var(--transition-base);
-		box-shadow: 0 2px 8px -2px var(--color-primary-shadow);
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 8px -2px var(--color-primary-shadow, rgba(255, 107, 53, 0.20));
 	}
 
 	.send-btn:hover:not(.disabled) {
-		background-color: var(--color-primary-dark);
+		background-color: var(--color-primary-hover, #E55A2B);
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px -2px var(--color-primary-shadow-hover);
+		box-shadow: 0 4px 12px -2px var(--color-primary-shadow-hover, rgba(255, 107, 53, 0.30));
 	}
 
 	.send-btn:active:not(.disabled) {
 		transform: translateY(0) scale(0.96);
-		box-shadow: 0 1px 4px var(--color-primary-shadow);
+		box-shadow: 0 1px 4px var(--color-primary-shadow, rgba(255, 107, 53, 0.20));
 	}
 
 	.send-btn.disabled {
-		background-color: var(--color-neutral-300);
+		background-color: var(--color-neutral-300, #D4CFC9);
 		cursor: not-allowed;
 		transform: none;
 		box-shadow: none;
@@ -203,9 +217,9 @@
 	}
 
 	.send-icon {
-		width: 20px;
-		height: 20px;
-		transition: transform var(--transition-fast);
+		width: 1.25rem;
+		height: 1.25rem;
+		transition: transform 0.15s ease;
 	}
 
 	.send-btn:hover:not(.disabled) .send-icon {
@@ -215,9 +229,9 @@
 	.input-hint {
 		display: flex;
 		justify-content: center;
-		margin-top: var(--space-2);
+		margin-top: 0.5rem;
 		opacity: 0.7;
-		transition: opacity var(--transition-fast);
+		transition: opacity 0.15s ease;
 	}
 
 	.input-wrapper:focus-within ~ .input-hint {
@@ -225,8 +239,8 @@
 	}
 
 	.hint-text {
-		font-size: var(--text-xs);
-		color: var(--color-text-tertiary);
-		letter-spacing: var(--tracking-wide);
+		font-size: 0.75rem;
+		color: var(--color-fg-tertiary, #8A8380);
+		letter-spacing: 0.025em;
 	}
 </style>

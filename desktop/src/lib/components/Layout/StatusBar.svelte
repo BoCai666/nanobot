@@ -108,9 +108,10 @@
 <footer class="status-bar">
 	<!-- 左侧: Agent 状态 -->
 	<div class="status-left">
-		<div class="status-item {agentStatusConfig[$agentStatus]?.class || ''}">
+		<div class="status-badge {agentStatusConfig[$agentStatus]?.class || ''}">
+			<span class="status-dot"></span>
 			<span class="status-icon">
-				{@html agentStatusConfig[$agentStatus]?.icon({ class: 'w-4 h-4' }) || ''}
+				{@html agentStatusConfig[$agentStatus]?.icon({ class: 'w-3.5 h-3.5' }) || ''}
 			</span>
 			<span class="status-label">{agentStatusConfig[$agentStatus]?.label || '未知'}</span>
 		</div>
@@ -125,9 +126,9 @@
 		>
 			<span class="mode-icon">
 				{#if $appMode === 'simple'}
-					{@html SimpleIcon({ class: 'w-4 h-4' })}
+					{@html SimpleIcon({ class: 'w-3.5 h-3.5' })}
 				{:else}
-					{@html AdvancedIcon({ class: 'w-4 h-4' })}
+					{@html AdvancedIcon({ class: 'w-3.5 h-3.5' })}
 				{/if}
 			</span>
 			<span class="mode-label">{$appMode === 'simple' ? '简单' : '高级'}</span>
@@ -137,12 +138,13 @@
 	<!-- 右侧: API 连接状态 -->
 	<div class="status-right">
 		<button
-			class="status-item clickable {connectionStatusConfig[$apiConnectionStatus]?.class || ''}"
+			class="status-badge clickable {connectionStatusConfig[$apiConnectionStatus]?.class || ''}"
 			onclick={handleConnectionClick}
 			title="点击重新检查连接"
 		>
+			<span class="status-dot"></span>
 			<span class="status-icon">
-				{@html connectionStatusConfig[$apiConnectionStatus]?.icon({ class: 'w-4 h-4' }) || ''}
+				{@html connectionStatusConfig[$apiConnectionStatus]?.icon({ class: 'w-3.5 h-3.5' }) || ''}
 			</span>
 			<span class="status-label">{connectionStatusConfig[$apiConnectionStatus]?.label || '未知'}</span>
 		</button>
@@ -150,23 +152,46 @@
 </footer>
 
 <style>
+	/* 状态栏容器 - 温暖背景 */
 	.status-bar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		height: var(--statusbar-height);
 		padding: 0 var(--space-4);
-		background-color: var(--color-bg-secondary);
+		background: linear-gradient(
+			180deg,
+			var(--color-bg-secondary) 0%,
+			var(--color-bg-primary) 100%
+		);
 		border-top: 1px solid var(--color-border);
 		font-size: 0.8125rem;
-		color: var(--color-text-secondary);
+		color: var(--color-fg-secondary);
+		position: relative;
+	}
+
+	/* 顶部细线 - 品牌色渐变 */
+	.status-bar::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 2px;
+		background: linear-gradient(
+			90deg,
+			var(--color-brand-400) 0%,
+			var(--color-primary) 50%,
+			var(--color-brand-400) 100%
+		);
+		opacity: 0.6;
 	}
 
 	.status-left,
 	.status-right {
 		display: flex;
 		align-items: center;
-		gap: var(--space-4);
+		gap: var(--space-3);
 	}
 
 	.status-center {
@@ -174,112 +199,212 @@
 		align-items: center;
 	}
 
-	.status-item {
+	/* 状态徽章 - 圆角胶囊形状 */
+	.status-badge {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		padding: var(--space-1) var(--space-2);
-		border-radius: var(--radius-md);
-		transition: all var(--transition-fast);
+		padding: var(--space-1.5) var(--space-3);
+		border-radius: var(--radius-full);
+		background-color: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		transition: all var(--transition-base);
+		box-shadow: var(--shadow-sm);
 	}
 
-	.status-item.clickable {
+	/* 状态指示点 */
+	.status-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background-color: var(--color-fg-muted);
+		transition: all var(--transition-base);
+	}
+
+	.status-badge.clickable {
 		cursor: pointer;
 		border: none;
 		background: transparent;
 		font-size: inherit;
 		font-family: inherit;
+		padding: var(--space-1.5) var(--space-2);
 	}
 
-	.status-item.clickable:hover {
-		opacity: 0.8;
+	.status-badge.clickable:hover {
+		background-color: var(--color-bg-tertiary);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-md);
+	}
+
+	.status-badge.clickable:active {
+		transform: translateY(0);
 	}
 
 	.status-icon {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transition: transform var(--transition-fast);
 	}
 
 	.status-label {
 		font-weight: 500;
 		white-space: nowrap;
+		letter-spacing: 0.01em;
 	}
 
-	/* Agent 状态样式 */
+	/* ===== Agent 状态样式 ===== */
 	.status-running {
-		color: var(--color-success);
 		background-color: var(--color-success-bg);
+		border-color: var(--color-success);
+		color: var(--color-success-dark);
+	}
+
+	.status-running .status-dot {
+		background-color: var(--color-success);
+		box-shadow: 0 0 6px var(--color-success);
+		animation: pulse-glow 2s ease-in-out infinite;
 	}
 
 	.status-running .status-icon {
-		animation: pulse 2s ease-in-out infinite;
+		color: var(--color-success);
 	}
 
 	.status-idle {
-		color: var(--color-text-tertiary);
 		background-color: var(--color-bg-tertiary);
+		border-color: var(--color-border);
+		color: var(--color-fg-secondary);
+	}
+
+	.status-idle .status-dot {
+		background-color: var(--color-fg-muted);
 	}
 
 	.status-error {
-		color: var(--color-error);
 		background-color: var(--color-error-bg);
+		border-color: var(--color-error);
+		color: var(--color-error-dark);
 	}
 
-	/* 连接状态样式 */
+	.status-error .status-dot {
+		background-color: var(--color-error);
+		box-shadow: 0 0 6px var(--color-error);
+	}
+
+	.status-error .status-icon {
+		color: var(--color-error);
+	}
+
+	/* ===== 连接状态样式 ===== */
 	.connection-connected {
-		color: var(--color-success);
 		background-color: var(--color-success-bg);
+		border-color: var(--color-success);
+		color: var(--color-success-dark);
+	}
+
+	.connection-connected .status-dot {
+		background-color: var(--color-success);
+		box-shadow: 0 0 6px var(--color-success);
+		animation: pulse-glow 3s ease-in-out infinite;
+	}
+
+	.connection-connected .status-icon {
+		color: var(--color-success);
 	}
 
 	.connection-disconnected {
-		color: var(--color-error);
 		background-color: var(--color-error-bg);
+		border-color: var(--color-error);
+		color: var(--color-error-dark);
+	}
+
+	.connection-disconnected .status-dot {
+		background-color: var(--color-error);
+		box-shadow: 0 0 6px var(--color-error);
+	}
+
+	.connection-disconnected .status-icon {
+		color: var(--color-error);
 	}
 
 	.connection-connecting {
-		color: var(--color-warning);
 		background-color: var(--color-warning-bg);
+		border-color: var(--color-warning);
+		color: var(--color-warning-dark);
 	}
 
-	/* 模式切换按钮 */
+	.connection-connecting .status-dot {
+		background-color: var(--color-warning);
+		animation: pulse-glow 1s ease-in-out infinite;
+	}
+
+	.connection-connecting .status-icon {
+		color: var(--color-warning);
+	}
+
+	/* ===== 模式切换按钮 ===== */
 	.mode-toggle-btn {
 		display: flex;
 		align-items: center;
-		gap: var(--space-1);
-		padding: var(--space-1) var(--space-3);
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-4);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background-color: var(--color-bg-primary);
-		color: var(--color-text-secondary);
+		border-radius: var(--radius-full);
+		background: linear-gradient(
+			180deg,
+			var(--color-bg-elevated) 0%,
+			var(--color-bg-secondary) 100%
+		);
+		color: var(--color-fg-secondary);
 		font-size: 0.75rem;
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: all var(--transition-base);
+		box-shadow: var(--shadow-sm);
+		letter-spacing: 0.02em;
 	}
 
 	.mode-toggle-btn:hover {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
+		background: linear-gradient(
+			180deg,
+			var(--color-bg-elevated) 0%,
+			var(--color-primary-bg) 100%
+		);
+		box-shadow: var(--shadow-md), 0 0 12px var(--color-primary-shadow);
+		transform: translateY(-1px);
+	}
+
+	.mode-toggle-btn:active {
+		transform: translateY(0);
+		box-shadow: var(--shadow-sm);
 	}
 
 	.mode-icon {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transition: transform var(--transition-fast);
+	}
+
+	.mode-toggle-btn:hover .mode-icon {
+		transform: scale(1.1);
 	}
 
 	.mode-label {
 		text-transform: capitalize;
 	}
 
-	/* 动画 */
-	@keyframes pulse {
+	/* ===== 动画 ===== */
+	@keyframes pulse-glow {
 		0%, 100% {
 			opacity: 1;
+			transform: scale(1);
 		}
 		50% {
-			opacity: 0.5;
+			opacity: 0.6;
+			transform: scale(1.2);
 		}
 	}
 

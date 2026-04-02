@@ -1,10 +1,10 @@
 <script lang="ts">
 	/**
 	 * MessageBubble 组件
-	 * 
+	 *
 	 * 聊天消息气泡组件，区分用户和 AI 消息样式
-	 * - 用户消息：右对齐，蓝色背景
-	 * - AI 消息：左对齐，灰色背景
+	 * - 用户消息：右对齐，温暖橙色背景 (#FF6B35)
+	 * - AI 消息：左对齐，温暖浅色背景 (#FFF8F5)
 	 * - 支持显示时间戳和消息状态
 	 * - 支持流式响应光标
 	 */
@@ -97,19 +97,21 @@
 			alt={isUser ? "用户" : "AI"}
 			fallback={isUser ? "U" : "AI"}
 			size="md"
-			class={cn(isUser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700")}
+			class={cn(
+				isUser
+					? "user-avatar bg-brand text-fg-inverse"
+					: "ai-avatar bg-secondary text-fg-secondary"
+			)}
 		/>
 
 		<!-- 消息内容区域 -->
-		<div class={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start")}>
+		<div class={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
 			<!-- 气泡 -->
 			<div
 				class={cn(
-					"message-bubble relative rounded-2xl px-4 py-2.5",
-					"shadow-sm transition-all duration-200",
-					isUser
-						? "user-message rounded-tr-sm"
-						: "ai-message rounded-tl-sm"
+					"message-bubble relative px-4 py-3",
+					"transition-all duration-200 ease-out",
+					isUser ? "user-message" : "ai-message"
 				)}
 			>
 				<!-- 思考过程（仅 AI 消息显示） -->
@@ -129,18 +131,18 @@
 			<!-- 元信息（时间戳和状态） -->
 			<div
 				class={cn(
-					"flex items-center gap-2 text-xs",
+					"flex items-center gap-2 px-1",
 					isUser ? "flex-row-reverse" : "flex-row"
 				)}
 			>
 				<!-- 时间戳 -->
 				<time
-					datetime={message.timestamp instanceof Date 
-						? message.timestamp.toISOString() 
+					datetime={message.timestamp instanceof Date
+						? message.timestamp.toISOString()
 						: message.timestamp}
-					class="timestamp text-muted-foreground"
-					title={message.timestamp instanceof Date 
-						? message.timestamp.toLocaleString("zh-CN") 
+					class="timestamp"
+					title={message.timestamp instanceof Date
+						? message.timestamp.toLocaleString("zh-CN")
 						: new Date(message.timestamp).toLocaleString("zh-CN")}
 				>
 					{formatTime(message.timestamp)}
@@ -156,68 +158,156 @@
 </div>
 
 <style>
-	/* 用户消息气泡样式 - 使用设计系统变量 */
+	/* ============================================
+	   用户消息气泡样式 - 温暖的品牌橙色
+	   ============================================ */
 	.user-message {
-		background-color: var(--user-bubble, #3D9970);
-		color: var(--user-bubble-foreground, #FAFAF8);
+		background-color: var(--user-bubble);
+		color: var(--user-bubble-foreground);
+		border-radius: var(--radius-lg);
+		border-bottom-right-radius: var(--radius-sm);
+		box-shadow: var(--shadow-md);
 	}
 
-	/* AI 消息气泡样式 - 浅色模式 */
+	.user-message:hover {
+		box-shadow: var(--shadow-lg);
+	}
+
+	/* ============================================
+	   AI 消息气泡样式 - 温暖的浅色背景
+	   ============================================ */
 	.ai-message {
-		background-color: var(--ai-bubble, #F7F6F3);
-		color: var(--ai-bubble-foreground, #37352F);
+		background-color: var(--ai-bubble);
+		color: var(--ai-bubble-foreground);
+		border-radius: var(--radius-lg);
+		border-bottom-left-radius: var(--radius-sm);
+		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border);
 	}
 
-	/* 用户消息中的 Markdown 样式覆盖 */
+	.ai-message:hover {
+		background-color: var(--color-card-hover);
+		box-shadow: var(--shadow-md);
+	}
+
+	/* ============================================
+	   用户消息中的 Markdown 样式覆盖
+	   ============================================ */
 	.user-message .message-content :global(.markdown-content) {
-		color: var(--user-bubble-foreground, #FAFAF8);
+		color: var(--user-bubble-foreground);
 	}
 
 	.user-message .message-content :global(a) {
-		color: var(--user-bubble-overlay-90, rgba(250, 250, 248, 0.9));
-		border-bottom-color: var(--user-bubble-overlay-50, rgba(250, 250, 248, 0.5));
+		color: var(--user-bubble-overlay-90);
+		border-bottom-color: var(--user-bubble-overlay-40);
+		transition: all var(--transition-fast);
 	}
 
 	.user-message .message-content :global(a:hover) {
-		color: var(--user-bubble-foreground, #FAFAF8);
-		border-bottom-color: var(--user-bubble-foreground, #FAFAF8);
+		color: var(--user-bubble-foreground);
+		border-bottom-color: var(--user-bubble-foreground);
 	}
 
 	.user-message .message-content :global(code:not(pre code)) {
-		background-color: var(--user-bubble-overlay-20, rgba(250, 250, 248, 0.2));
-		color: var(--user-bubble-foreground, #FAFAF8);
+		background-color: var(--user-bubble-code-bg);
+		color: var(--user-bubble-foreground);
+		border-radius: var(--radius-sm);
+		padding: 0.125rem 0.375rem;
+	}
+
+	.user-message .message-content :global(pre) {
+		background-color: var(--user-bubble-code-bg);
+		border-radius: var(--radius-md);
 	}
 
 	.user-message .message-content :global(blockquote) {
-		border-left-color: var(--user-bubble-overlay-50, rgba(250, 250, 248, 0.5));
-		background-color: var(--user-bubble-overlay-15, rgba(250, 250, 248, 0.15));
+		border-left-color: var(--user-bubble-overlay-40);
+		background-color: var(--user-bubble-overlay-15);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 	}
 
 	.user-message .message-content :global(strong),
 	.user-message .message-content :global(b) {
-		color: var(--user-bubble-foreground, #FAFAF8);
+		color: var(--user-bubble-foreground);
+		font-weight: 600;
 	}
 
-	/* 暗色模式适配 */
-	:global(.dark) .ai-message {
-		background-color: var(--ai-bubble, #282622);
-		color: var(--ai-bubble-foreground, #EBE9E4);
+	/* ============================================
+	   AI 消息中的 Markdown 样式优化
+	   ============================================ */
+	.ai-message .message-content :global(code:not(pre code)) {
+		background-color: var(--color-bg-tertiary);
+		border-radius: var(--radius-sm);
+		padding: 0.125rem 0.375rem;
 	}
 
-	/* 时间戳悬停效果 */
+	.ai-message .message-content :global(pre) {
+		background-color: var(--code-bg);
+		border-radius: var(--radius-md);
+	}
+
+	.ai-message .message-content :global(blockquote) {
+		border-left-color: var(--color-brand-300);
+		background-color: var(--color-brand-50);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	}
+
+	/* ============================================
+	   头像样式
+	   ============================================ */
+	.user-avatar {
+		background-color: var(--color-brand-500);
+		color: var(--color-fg-inverse);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.ai-avatar {
+		background-color: var(--color-bg-secondary);
+		color: var(--color-fg-secondary);
+		border: 1px solid var(--color-border);
+	}
+
+	/* ============================================
+	   时间戳样式
+	   ============================================ */
 	.timestamp {
+		font-size: 0.75rem;
+		color: var(--color-fg-tertiary);
 		opacity: 0.7;
-		transition: opacity 0.15s ease;
+		transition: opacity var(--transition-fast);
 	}
 
 	.message-bubble-wrapper:hover .timestamp {
 		opacity: 1;
 	}
 
-	/* 响应式适配 */
+	/* ============================================
+	   响应式适配
+	   ============================================ */
 	@media (max-width: 640px) {
 		.message-bubble-wrapper > div {
 			max-width: 90%;
 		}
+
+		.message-bubble {
+			padding-left: 0.875rem;
+			padding-right: 0.875rem;
+		}
+	}
+
+	/* ============================================
+	   暗色模式适配
+	   ============================================ */
+	:global(.dark) .ai-message {
+		border-color: var(--color-border);
+	}
+
+	:global(.dark) .ai-message:hover {
+		background-color: var(--color-card-hover);
+	}
+
+	:global(.dark) .ai-avatar {
+		background-color: var(--color-bg-secondary);
+		border-color: var(--color-border);
 	}
 </style>
