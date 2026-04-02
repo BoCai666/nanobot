@@ -6,6 +6,7 @@
 
 import { browser } from '$app/environment';
 import { logger } from '$lib/utils/logger';
+import type { Message } from '$lib/types/message';
 
 // ============================================
 // 类型定义
@@ -29,6 +30,8 @@ export interface ConversationHistory {
 	messageCount: number;
 	/** 对话预览（前100字符） */
 	preview: string;
+	/** 消息列表 */
+	messages: Message[];
 }
 
 /**
@@ -147,17 +150,19 @@ export function createHistoryStore() {
 	function addConversation(
 		title: string,
 		channelId: string,
-		firstMessage: string
+		messages: Message[]
 	): ConversationHistory {
 		const now = new Date();
+		const firstMessage = messages.find(m => m.role === 'user')?.content || '';
 		const newConversation: ConversationHistory = {
 			id: generateId(),
 			title: title || '新对话',
 			createdAt: now,
 			updatedAt: now,
 			channelId,
-			messageCount: 1,
-			preview: truncatePreview(firstMessage)
+			messageCount: messages.length,
+			preview: truncatePreview(firstMessage),
+			messages: messages
 		};
 
 		// 添加到列表开头
@@ -179,7 +184,7 @@ export function createHistoryStore() {
 	 */
 	function updateConversation(
 		id: string,
-		updates: Partial<Pick<ConversationHistory, 'title' | 'messageCount' | 'preview'>>
+		updates: Partial<Pick<ConversationHistory, 'title' | 'messageCount' | 'preview' | 'messages'>>
 	): void {
 		const index = conversations.findIndex(c => c.id === id);
 		if (index === -1) return;
@@ -260,6 +265,14 @@ export function createHistoryStore() {
 	}
 
 	/**
+	 * 获取对话的消息列表
+	 */
+	function getConversationMessages(id: string): Message[] {
+		const conv = conversations.find(c => c.id === id);
+		return conv?.messages || [];
+	}
+
+	/**
 	 * 根据频道 ID 获取对话列表
 	 */
 	function getConversationsByChannel(channelId: string): ConversationHistory[] {
@@ -297,6 +310,7 @@ export function createHistoryStore() {
 		setSearchQuery,
 		searchConversations,
 		getConversation,
+		getConversationMessages,
 		getConversationsByChannel
 	};
 }
@@ -317,11 +331,14 @@ export const conversations = {
 };
 
 export function initHistory(): void { historyStore.init(); }
-export function addConversation(title: string, channelId: string, firstMessage: string): ConversationHistory {
-	return historyStore.addConversation(title, channelId, firstMessage);
+export function addConversation(title: string, channelId: string, messages: Message[]): ConversationHistory {
+	return historyStore.addConversation(title, channelId, messages);
 }
-export function updateConversation(id: string, updates: Partial<Pick<ConversationHistory, 'title' | 'messageCount' | 'preview'>>): void {
+export function updateConversation(id: string, updates: Partial<Pick<ConversationHistory, 'title' | 'messageCount' | 'preview' | 'messages'>>): void {
 	historyStore.updateConversation(id, updates);
+}
+export function getConversationMessages(id: string): Message[] {
+	return historyStore.getConversationMessages(id);
 }
 export function deleteConversation(id: string): void { historyStore.deleteConversation(id); }
 export function clearHistory(): void { historyStore.clearAll(); }

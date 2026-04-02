@@ -46,10 +46,11 @@
 
 	/**
 	 * 处理键盘事件
-	 * 支持 Ctrl+Enter 或 Cmd+Enter 发送
+	 * Enter 发送，Shift+Enter 换行
 	 */
 	function handleKeyDown(event: KeyboardEvent) {
-		if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+		// Enter 发送，Shift+Enter 换行
+		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			handleSend();
 		}
@@ -58,8 +59,11 @@
 
 <div
 	class={cn(
-		"message-input-container relative flex items-end gap-2 rounded-lg border border-input bg-background p-2 shadow-sm",
-		"focus-within:ring-1 focus-within:ring-ring",
+		"message-input-container relative flex items-end gap-2 rounded-xl p-2.5",
+		"border border-[var(--color-border)]",
+		"bg-[var(--color-bg-secondary)]",
+		"focus-within:border-[var(--color-brand-400)] focus-within:ring-2 focus-within:ring-[var(--color-primary-ring)]",
+		"shadow-sm transition-all duration-200",
 		disabled && "opacity-50",
 		className
 	)}
@@ -71,11 +75,11 @@
 		rows={1}
 		maxRows={6}
 		onkeydown={handleKeyDown}
-		class="message-textarea min-h-[44px] flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
+		class="message-textarea min-h-[44px] flex-1 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 text-[var(--color-fg-primary)] placeholder:text-[var(--color-fg-tertiary)] !px-4 !py-2.5"
 	/>
 	<div class="flex items-center gap-2">
 		<!-- 字符计数 -->
-		<span class="char-count text-xs text-muted-foreground">
+		<span class="char-count text-xs text-[var(--color-fg-tertiary)]">
 			{charCount}/{maxChars}
 		</span>
 		<button
@@ -83,11 +87,12 @@
 			onclick={handleSend}
 			disabled={!canSend}
 			class={cn(
-				"send-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors",
-				"bg-primary text-primary-foreground",
-				"hover:bg-primary/90",
-				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-				!canSend && "disabled cursor-not-allowed opacity-50"
+				"send-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+				"bg-[var(--color-brand-500)] text-white",
+				"hover:bg-[var(--color-brand-600)] hover:shadow-md",
+				"active:scale-95",
+				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-ring)]",
+				!canSend && "disabled cursor-not-allowed opacity-50 bg-[var(--color-neutral-300)]"
 			)}
 			aria-label="发送消息"
 		>
@@ -97,8 +102,8 @@
 </div>
 
 <!-- 快捷键提示 -->
-<div class="input-hint mt-1 text-center">
-	<span class="hint-text text-xs text-muted-foreground">Ctrl + Enter 发送</span>
+<div class="input-hint mt-1.5 text-center">
+	<span class="hint-text text-xs text-[var(--color-fg-tertiary)]">Enter 发送 · Shift+Enter 换行</span>
 </div>
 
 <style>

@@ -1,7 +1,6 @@
 /**
  * 字体系统 Tokens
- * 温暖友好的人文主义无衬线体 Lato + 专业代码字体 JetBrains Mono
- * 基于现有设计系统的排版规范
+ * 现代 Inter + 中文思源黑体
  */
 
 /* ========================================
@@ -9,15 +8,15 @@
    ======================================== */
 
 :root {
-	/* 主字体 - 温暖友好的人文主义无衬线体 */
-	--font-sans: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	/* 主字体 - 现代 Inter + 中文思源黑体 */
+	--font-sans: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-	/* 代码字体 - JetBrains Mono：专业、清晰 */
+	/* 代码字体 - JetBrains Mono */
 	--font-mono: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace;
 }
 
 /* ========================================
-   字体大小 - 基于 Lato 的清晰层级
+   字体大小 - 基于 Plus Jakarta Sans 的清晰层级
    ======================================== */
 
 :root {

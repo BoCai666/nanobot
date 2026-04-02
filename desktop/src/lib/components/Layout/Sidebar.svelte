@@ -8,6 +8,7 @@
 	 * - 设置入口
 	 */
 	import { sidebarExpanded, currentView, toggleSidebar, setView } from '$lib/stores/app';
+	import { appStore } from '$lib/stores/app.svelte';
 	import { historyStore, type ConversationHistory } from '$lib/stores/history.svelte';
 	import { onMount } from 'svelte';
 
@@ -59,17 +60,20 @@
 	function handleNewChat() {
 		// 清除当前选中的对话
 		activeConversationId = '';
-		// 切换到聊天视图
-		setView('chat');
+		// 请求新建对话（会触发 ChatView 清除消息）
+		appStore.requestNewChat();
 		console.log('新建对话');
 	}
 
 	// 选择对话
 	function handleSelectConversation(conversation: ConversationHistory) {
 		activeConversationId = conversation.id;
+		// 同步到全局状态
+		appStore.setCurrentConversationId(conversation.id);
+		// 切换到聊天视图
 		setView('chat');
 		console.log('选择对话:', conversation.title);
-		// TODO: 加载对话内容
+		// TODO: 加载对话内容（需要持久化消息）
 	}
 
 	// 删除对话
@@ -156,11 +160,14 @@
 				<ul class="conversation-list">
 					{#each historyStore.conversations as conversation (conversation.id)}
 						<li>
-							<button
+							<div
 								class="history-item"
 								class:active={conversation.id === activeConversationId}
 								onclick={() => handleSelectConversation(conversation)}
+								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectConversation(conversation); }}
 								title={conversation.title}
+								role="button"
+								tabindex="0"
 							>
 								<div class="item-content">
 									<span class="item-title">{conversation.title}</span>
@@ -176,7 +183,7 @@
 										<path d="M18 6L6 18M6 6l12 12"/>
 									</svg>
 								</button>
-							</button>
+							</div>
 						</li>
 					{/each}
 				</ul>

@@ -13,6 +13,8 @@
 	import { agentAPI } from '$lib/api/agent';
 	import { logUserMessage, logAiResponseStart, logAiDelta, logAiResponseEnd } from '$lib/api/tray';
 	import { logger } from '$lib/utils/logger';
+	import { appStore } from '$lib/stores/app.svelte';
+	import { historyStore } from '$lib/stores/history.svelte';
 
 	// Props
 	interface Props {
@@ -64,6 +66,16 @@
 		// 定期检查连接状态
 		const interval = setInterval(checkConnection, 30000);
 		return () => clearInterval(interval);
+	});
+
+	// 监听新建对话请求
+	$effect(() => {
+		// 读取 newChatCounter 触发响应式依赖
+		const counter = appStore.newChatCounter;
+		// 当 counter > 0 时清除消息（首次加载时 counter 为 0，不触发）
+		if (counter > 0) {
+			clearChat();
+		}
 	});
 
 	// 使用真实 API 发送消息
@@ -198,6 +210,9 @@
 				chatContainerRef.finishStreamingResponse(aiMessageId);
 			}
 
+			// 发送成功后，保存/更新历史记录
+			saveCurrentConversation();
+
 		} catch (error) {
 			logger.error('Failed to generate response:', error);
 
@@ -224,6 +239,49 @@
 		// 同时清除错误状态
 		errorState = { hasError: false, title: '', message: '' };
 	}
+
+	// 保存当前对话到历史记录
+	function saveCurrentConversation() {
+		if (!chatContainerRef) return;
+
+		const messages = chatContainerRef.getMessages();
+		if (messages.length === 0) return;
+
+		const currentConvId = appStore.currentConversationId;
+		const firstUserMsg = messages.find(m => m.role === 'user')?.content || '';
+		const title = firstUserMsg.length > 30 ? firstUserMsg.substring(0, 30) + '...' : firstUserMsg;
+
+		if (!currentConvId) {
+			// 创建新对话
+			const newConv = historyStore.addConversation(title, 'desktop', messages);
+			appStore.setCurrentConversationId(newConv.id);
+		} else {
+			// 更新现有对话
+			historyStore.updateConversation(currentConvId, {
+				messages: messages,
+				messageCount: messages.length,
+				preview: firstUserMsg.substring(0, 100)
+			});
+		}
+	}
+
+	// 加载历史对话
+	function loadConversation(convId: string) {
+		const messages = historyStore.getConversationMessages(convId);
+		if (messages.length > 0) {
+			chatContainerRef?.setMessages(messages);
+		} else {
+			chatContainerRef?.clearMessages();
+		}
+	}
+
+	// 监听当前对话 ID 变化（点击历史记录）
+	$effect(() => {
+		const convId = appStore.currentConversationId;
+		if (convId) {
+			loadConversation(convId);
+		}
+	});
 
 	// 重试发送
 	async function handleRetry() {
@@ -311,6 +369,7 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
+		width: 100%;
 		height: 100%;
 		background-color: var(--color-bg-primary);
 		overflow: hidden;
@@ -519,6 +578,7 @@
 		position: relative;
 		z-index: 1;
 		flex: 1;
+		width: 100%;
 		overflow: hidden;
 	}
 

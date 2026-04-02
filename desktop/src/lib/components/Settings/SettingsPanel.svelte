@@ -182,6 +182,7 @@
 	.settings-panel {
 		display: flex;
 		flex-direction: column;
+		width: 100%;
 		height: 100%;
 		background-color: var(--color-bg-primary);
 		overflow: hidden;
@@ -537,6 +538,7 @@
 	   ============================================ */
 	.settings-main {
 		flex: 1;
+		width: 100%;
 		overflow-y: auto;
 		overflow-x: hidden;
 		padding: var(--space-6);
@@ -546,6 +548,7 @@
 
 	/* 内容卡片 - 温暖圆角阴影 */
 	.content-card {
+		width: 100%;
 		background-color: var(--color-card);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-xl);

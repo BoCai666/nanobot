@@ -67,6 +67,12 @@ export function createAppStore() {
 	// 当前选中的对话
 	let currentConversation = $state<CurrentConversation | null>(null);
 
+	// 当前对话 ID（用于历史记录跟踪）
+	let currentConversationId = $state<string>('');
+
+	// 新建对话计数器（每次新建时递增，用于触发清除消息）
+	let newChatCounter = $state<number>(0);
+
 	// 当前选中的 Channel 名称（使用 $derived.by）
 	let currentChannelName = $derived.by(() => {
 		const channel = channels.find(ch => ch.id === selectedChannel);
@@ -139,6 +145,19 @@ export function createAppStore() {
 		}
 	}
 
+	// 请求新建对话
+	function requestNewChat() {
+		newChatCounter += 1;
+		currentView = 'chat';
+		// 清除当前对话 ID
+		currentConversationId = '';
+	}
+
+	// 设置当前对话 ID
+	function setCurrentConversationId(id: string) {
+		currentConversationId = id;
+	}
+
 	return {
 		// 状态getters（保持响应式）
 		get view() { return currentView; },
@@ -150,6 +169,8 @@ export function createAppStore() {
 		get selectedChannel() { return selectedChannel; },
 		get channels() { return channels; },
 		get currentChannelName() { return currentChannelName; },
+		get newChatCounter() { return newChatCounter; },
+		get currentConversationId() { return currentConversationId; },
 
 		// 方法
 		setView,
@@ -162,7 +183,9 @@ export function createAppStore() {
 		setAppModeValue,
 		selectChannel,
 		setChannelConnected,
-		checkApiConnection
+		checkApiConnection,
+		requestNewChat,
+		setCurrentConversationId
 	};
 }
 

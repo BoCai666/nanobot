@@ -3,13 +3,13 @@
 	 * ThinkingBlock 组件
 	 *
 	 * 可折叠的思考过程显示组件
-	 * - 默认折叠，显示 "💭 思考过程" 标题
-	 * - 点击展开显示完整思考内容
+	 * - 默认展开，显示完整思考内容
+	 * - 点击折叠隐藏思考内容
 	 * - 支持 markdown 渲染
 	 * - 带有展开/折叠动画效果
 	 *
 	 * 用法:
-	 * <ThinkingBlock thinking={message.thinking} defaultExpanded={false} />
+	 * <ThinkingBlock thinking={message.thinking} />
 	 */
 	import MarkdownRenderer from './MarkdownRenderer.svelte';
 	import { slide } from 'svelte/transition';
@@ -22,10 +22,10 @@
 		defaultExpanded?: boolean;
 	}
 
-	let { thinking, defaultExpanded = false }: Props = $props();
+	let { thinking, defaultExpanded = true }: Props = $props();
 
 	// 展开状态
-	let expanded = $state(defaultExpanded ?? false);
+	let expanded = $state(defaultExpanded ?? true);
 
 	/**
 	 * 切换展开/折叠状态

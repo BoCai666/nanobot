@@ -381,6 +381,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
+		max-width: 100%;
+		width: 100%;
 	}
 
 	/* ============================================
@@ -448,7 +450,7 @@
 	.message-content {
 		flex: 1;
 		max-width: calc(100% - 56px);
-		min-width: 80px;
+		min-width: 0; /* 避免 flex: 1 的最小宽度问题 */
 	}
 
 	.message.user .message-content {
@@ -491,6 +493,7 @@
 		line-height: var(--leading-relaxed);
 		word-wrap: break-word;
 		overflow-wrap: break-word;
+		max-width: 100%; /* 确保不超出父容器 */
 		box-shadow: var(--shadow-sm);
 		transition: box-shadow var(--transition-fast),
 		            transform var(--transition-fast);

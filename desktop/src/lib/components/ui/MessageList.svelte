@@ -145,7 +145,7 @@
 
 			<div
 				class={cn(
-					"message-item flex gap-3",
+					"message-item flex gap-3 min-w-0 w-full",
 					isUser && "flex-row-reverse"
 				)}
 			>
@@ -169,7 +169,7 @@
 				<!-- 消息内容 -->
 				<div
 					class={cn(
-						"message-bubble flex flex-col gap-1 max-w-[85%]",
+						"message-bubble flex flex-col gap-1 max-w-[85%] min-w-0",
 						isUser ? "items-end" : "items-start"
 					)}
 				>
@@ -190,15 +190,15 @@
 						</div>
 					{/if}
 
-					<!-- 消息气泡 -->
-					<div
-						class={cn(
-							"message-content message-body rounded-2xl px-4 py-3",
-							isUser 
-								? "bg-primary text-primary-foreground rounded-br-sm" 
-								: "bg-muted text-foreground rounded-bl-sm"
-						)}
-					>
+                    <!-- 消息气泡 -->
+                    <div
+                        class={cn(
+                            "message-content message-body rounded-2xl px-4 py-3 min-w-0 w-full",
+                            isUser
+                                ? "bg-primary text-primary-foreground rounded-br-sm" 
+                                : "bg-muted text-foreground rounded-bl-sm"
+                        )}
+                    >
 						{#if isUser || isSystem}
 							<!-- 用户和系统消息显示纯文本 -->
 							<p class="whitespace-pre-wrap">{message.content}</p>
@@ -238,9 +238,20 @@
 
 <style>
 	.message-list {
+		width: 100%;
 		height: 100%;
 		scroll-behavior: smooth;
-	}
+		overflow-x: hidden; /* 添加水平溢出隐藏 */
+    }
+
+    .messages-container {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .messages-container {
+        max-width: 100%;
+    }
 
 	/* 自定义滚动条 */
 	.message-list::-webkit-scrollbar {
@@ -258,6 +269,20 @@
 
 	.message-list::-webkit-scrollbar-thumb:hover {
 		background-color: hsl(var(--muted-foreground) / 0.5);
+	}
+
+	:global(.dark) .message-list::-webkit-scrollbar-thumb {
+		background-color: hsl(var(--muted-foreground) / 0.2);
+	}
+
+	:global(.dark) .message-list::-webkit-scrollbar-thumb:hover {
+		background-color: hsl(var(--muted-foreground) / 0.4);
+	}
+
+	/* 消息内容换行优化 */
+	.message-content {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
 	}
 
 	/* 暗色模式适配 */

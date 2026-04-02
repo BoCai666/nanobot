@@ -1,7 +1,8 @@
 <script lang="ts">
 	import "../app.css";
 	import { onMount, onDestroy } from "svelte";
-	import { Sidebar, StatusBar, ShortcutsHelp } from "$lib/components/ui";
+	import { Sidebar } from "$lib/components/Layout";
+	import { StatusBar, ShortcutsHelp } from "$lib/components/ui";
 	import { SettingsPanel } from "$lib/components/Settings";
 	import { ChatView } from "$lib/components/Chat";
 	import { initTheme } from "$lib/stores/theme";

@@ -1,6 +1,5 @@
-/* 字体引入 - 温暖友好的 Lato + 专业代码字体 JetBrains Mono */
-/* 注意：@import 必须在其他 CSS 规则之前 */
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* 字体引入 - 现代 Inter + 中文思源黑体 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
 
 /* 设计系统 Tokens */
 @import "./lib/styles/tokens.css";
@@ -9,6 +8,24 @@
 @import "./lib/styles/animations.css";
 
 @import "tailwindcss";
+
+/* ============================================
+   Tailwind 4 主题配置 - 必须在 tailwindcss 导入之后
+   ============================================ */
+@theme {
+	/* 主字体 - 现代 Inter + 中文思源黑体 */
+	--font-sans: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+	/* 代码字体 - JetBrains Mono */
+	--font-mono: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace;
+}
+
+/* 全局字体优化 */
+html, body {
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
 
 /* ============================================
    设计系统变量 - 非颜色部分
