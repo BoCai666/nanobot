@@ -1,0 +1,808 @@
+/* ============================================
+   动画系统 - 仅使用 GPU 加速属性 (transform + opacity)
+   目标: 60fps, 持续时间 100-300ms
+   ============================================ */
+
+/* ============================================
+   1. 动画 Duration Tokens
+   - instant: 即时反馈，微交互
+   - fast: 快速过渡，悬停状态
+   - normal: 标准过渡，面板展开
+   - slow: 慢速过渡，模态框
+   - slower: 更慢过渡，复杂动画
+   - slowest: 最慢过渡，页面切换
+   ============================================ */
+:root {
+	/* 时长 tokens - 基于 Material Design Motion */
+	--duration-instant: 100ms;	/* 即时反馈 */
+	--duration-fast: 150ms;		/* 快速过渡 - 悬停状态 */
+	--duration-normal: 200ms;	/* 标准过渡 - 面板展开 */
+	--duration-base: 200ms;		/* 别名: 等同于 duration-normal (向后兼容) */
+	--duration-slow: 300ms;		/* 慢速过渡 - 模态框 */
+	--duration-slower: 400ms;	/* 更慢过渡 - 复杂动画 */
+	--duration-slowest: 500ms;	/* 最慢过渡 - 页面切换 */
+
+	/* 加载动画时长 */
+	--duration-spin: 1s;		/* 旋转加载 */
+	--duration-pulse: 2s;		/* 脉冲动画 */
+	--duration-shimmer: 1.5s;	/* 骨架屏闪烁 */
+
+	/* ============================================
+	   2. 动画 Easing Tokens
+	   - ease-out: 快出，用于入场动画
+	   - ease-in: 快入，用于出场动画
+	   - ease-in-out: 平滑，用于状态变化
+	   - ease-spring: 弹性，用于交互反馈
+	   - ease-bounce: 弹跳，用于强调
+	   - ease-elastic: 弹性回弹，用于弹窗
+	   ============================================ */
+
+	/* 缓动函数 - Material Design 推荐曲线 */
+	--ease-linear: linear;
+
+	/* 快出曲线 - 用于入场动画 (快速开始，缓慢结束) */
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+	/* 快入曲线 - 用于出场动画 (缓慢开始，快速结束) */
+	--ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+	--ease-in-quart: cubic-bezier(0.75, 0, 0.25, 1);
+
+	/* 平滑曲线 - 用于状态变化 */
+	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	--ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+	/* 弹性曲线 - 用于交互反馈 */
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--ease-spring-soft: cubic-bezier(0.2, 1.2, 0.4, 1);
+	--ease-spring-bouncy: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+	/* 弹跳曲线 - 用于强调 */
+	--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+	/* 弹性回弹曲线 - 用于弹窗 */
+	--ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+	/* ============================================
+	   3. 动画 Delay Tokens
+	   - 用于错开动画，创建层次感
+	   ============================================ */
+	--delay-none: 0ms;
+	--delay-fast: 50ms;
+	--delay-normal: 100ms;
+	--delay-slow: 150ms;
+	--delay-slower: 200ms;
+	--delay-slowest: 300ms;
+
+	/* ============================================
+	   4. 组合过渡变量
+	   - 预定义的过渡组合
+	   ============================================ */
+
+	/* 基础过渡 */
+	--transition-instant: var(--duration-instant) var(--ease-out);
+	--transition-fast: var(--duration-fast) var(--ease-out);
+	--transition-normal: var(--duration-normal) var(--ease-out);
+	--transition-base: var(--duration-normal) var(--ease-out);  /* 别名: 等同于 transition-normal (向后兼容) */
+	--transition-slow: var(--duration-slow) var(--ease-out);
+	--transition-slower: var(--duration-slower) var(--ease-out);
+	--transition-slowest: var(--duration-slowest) var(--ease-out);
+
+	/* 弹性过渡 */
+	--transition-spring: var(--duration-normal) var(--ease-spring);
+	--transition-bounce: var(--duration-slow) var(--ease-bounce);
+
+	/* 完整过渡 - 包含多个属性 */
+	--transition-all: all var(--duration-normal) var(--ease-out);
+	--transition-transform: transform var(--duration-fast) var(--ease-out);
+	--transition-opacity: opacity var(--duration-fast) var(--ease-out);
+	--transition-colors: background-color var(--duration-fast) var(--ease-out),
+	                     color var(--duration-fast) var(--ease-out),
+	                     border-color var(--duration-fast) var(--ease-out);
+	--transition-shadow: box-shadow var(--duration-normal) var(--ease-out);
+
+	/* 主题切换过渡 */
+	--theme-transition: background-color var(--duration-normal) var(--ease-in-out),
+	                    color var(--duration-normal) var(--ease-in-out),
+	                    border-color var(--duration-normal) var(--ease-in-out),
+	                    box-shadow var(--duration-normal) var(--ease-in-out);
+}
+
+/* ============================================
+   5. 过渡动画关键帧
+   - 淡入/淡出
+   - 滑入/滑出
+   - 缩放
+   - 旋转
+   ============================================ */
+
+/* --- 淡入动画 --- */
+
+/* 淡入 - 最简单的入场动画 */
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+/* 淡出 */
+@keyframes fadeOut {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+
+/* 淡入向上 - 消息出现、卡片入场 */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* 淡入向下 - 下拉菜单、通知 */
+@keyframes fadeInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* 淡入向左 */
+@keyframes fadeInLeft {
+	from {
+		opacity: 0;
+		transform: translateX(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* 淡入向右 */
+@keyframes fadeInRight {
+	from {
+		opacity: 0;
+		transform: translateX(-12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* --- 滑入动画 --- */
+
+/* 从左侧滑入 - 侧边栏、抽屉 */
+@keyframes slideInLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* 从右侧滑入 - 模态框、面板 */
+@keyframes slideInRight {
+	from {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* 从上方滑入 */
+@keyframes slideInUp {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* 从下方滑入 */
+@keyframes slideInDown {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* --- 缩放动画 --- */
+
+/* 缩放淡入 - 弹窗、按钮点击反馈 */
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* 缩放淡出 */
+@keyframes scaleOut {
+	from {
+		opacity: 1;
+		transform: scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: scale(0.95);
+	}
+}
+
+/* 从中心缩放 - 模态框 */
+@keyframes scaleInCenter {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* --- 旋转动画 --- */
+
+/* 旋转淡入 */
+@keyframes rotateIn {
+	from {
+		opacity: 0;
+		transform: rotate(-10deg);
+	}
+	to {
+		opacity: 1;
+		transform: rotate(0);
+	}
+}
+
+/* ============================================
+   6. 微交互动画关键帧
+   - 波纹效果
+   - 悬停上浮
+   - 按下缩放
+   - 焦点环
+   - 抖动反馈
+   ============================================ */
+
+/* --- 波纹效果 --- */
+
+/* 波纹扩散 */
+@keyframes ripple {
+	0% {
+		transform: scale(0);
+		opacity: 0.5;
+	}
+	100% {
+		transform: scale(4);
+		opacity: 0;
+	}
+}
+
+/* 波纹脉冲 */
+@keyframes ripple-pulse {
+	0% {
+		transform: scale(1);
+		opacity: 0.3;
+	}
+	50% {
+		transform: scale(1.5);
+		opacity: 0.1;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 0.3;
+	}
+}
+
+/* --- 悬停/按压效果 --- */
+
+/* 悬停上浮 */
+@keyframes hoverLift {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(-2px);
+	}
+}
+
+/* 按下下沉 */
+@keyframes pressDown {
+	0% {
+		transform: scale(1);
+	}
+	100% {
+		transform: scale(0.97);
+	}
+}
+
+/* --- 焦点效果 --- */
+
+/* 焦点环脉冲 */
+@keyframes focusRing {
+	0%, 100% {
+		box-shadow: 0 0 0 0 var(--color-primary-ring);
+	}
+	50% {
+		box-shadow: 0 0 0 4px var(--color-primary-ring);
+	}
+}
+
+/* --- 抖动反馈 --- */
+
+/* 轻微抖动 - 错误提示 */
+@keyframes shake {
+	0%, 100% { transform: translateX(0); }
+	10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+	20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* 轻微摆动 - 吸引注意 */
+@keyframes wiggle {
+	0%, 100% { transform: rotate(0deg); }
+	25% { transform: rotate(-3deg); }
+	75% { transform: rotate(3deg); }
+}
+
+/* 弹跳 - 按钮点击、标签切换 */
+@keyframes bounce {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-3px); }
+}
+
+/* 心跳 - 重要通知 */
+@keyframes heartbeat {
+	0%, 100% { transform: scale(1); }
+	14% { transform: scale(1.05); }
+	28% { transform: scale(1); }
+	42% { transform: scale(1.05); }
+	70% { transform: scale(1); }
+}
+
+/* ============================================
+   7. 加载动画关键帧
+   - 呼吸脉冲
+   - 旋转加载
+   - 骨架屏闪烁
+   - 进度条
+   ============================================ */
+
+/* --- 脉冲/呼吸动画 --- */
+
+/* 柔和脉冲 - 流式光标、加载指示 */
+@keyframes pulse-soft {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.5;
+		transform: scale(0.98);
+	}
+}
+
+/* 呼吸脉冲 - 连接状态、在线指示 */
+@keyframes pulse-glow {
+	0%, 100% {
+		opacity: 1;
+		box-shadow: 0 0 0 0 currentColor;
+	}
+	50% {
+		opacity: 0.7;
+		box-shadow: 0 0 8px 2px currentColor;
+	}
+}
+
+/* 渐变脉冲 - 加载状态 */
+@keyframes pulse-gradient {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+/* --- 旋转动画 --- */
+
+/* 加载旋转 */
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+/* 反向旋转 */
+@keyframes spin-reverse {
+	from { transform: rotate(360deg); }
+	to { transform: rotate(0deg); }
+}
+
+/* 摆动旋转 - 加载中 */
+@keyframes spin-wobble {
+	0% { transform: rotate(0deg); }
+	25% { transform: rotate(90deg); }
+	50% { transform: rotate(180deg); }
+	75% { transform: rotate(270deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* --- 骨架屏闪烁 --- */
+
+/* 骨架屏渐变 */
+@keyframes skeleton-shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+/* 骨架屏脉冲 */
+@keyframes skeleton-pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+/* --- 进度条动画 --- */
+
+/* 进度条滑动 */
+@keyframes progress-slide {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+/* 进度条脉冲 */
+@keyframes progress-pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+/* ============================================
+   8. 动画工具类
+   ============================================ */
+
+/* --- 淡入动画类 --- */
+
+/* 快速淡入 */
+.animate-fade-in {
+	animation: fadeIn var(--transition-fast);
+}
+
+/* 淡入向上 */
+.animate-fade-in-up {
+	animation: fadeInUp var(--transition-normal);
+}
+
+/* 淡入向下 */
+.animate-fade-in-down {
+	animation: fadeInDown var(--transition-fast);
+}
+
+/* 淡入向左 */
+.animate-fade-in-left {
+	animation: fadeInLeft var(--transition-fast);
+}
+
+/* 淡入向右 */
+.animate-fade-in-right {
+	animation: fadeInRight var(--transition-fast);
+}
+
+/* --- 滑入动画类 --- */
+
+/* 侧边栏滑入 */
+.animate-slide-in-left {
+	animation: slideInLeft var(--transition-normal);
+}
+
+/* 面板滑入 */
+.animate-slide-in-right {
+	animation: slideInRight var(--transition-normal);
+}
+
+/* 从上方滑入 */
+.animate-slide-in-up {
+	animation: slideInUp var(--transition-normal);
+}
+
+/* 从下方滑入 */
+.animate-slide-in-down {
+	animation: slideInDown var(--transition-normal);
+}
+
+/* --- 缩放动画类 --- */
+
+/* 弹窗缩放 */
+.animate-scale-in {
+	animation: scaleIn var(--transition-fast);
+}
+
+/* 模态框缩放 */
+.animate-scale-in-center {
+	animation: scaleInCenter var(--transition-normal);
+}
+
+/* 旋转淡入 */
+.animate-rotate-in {
+	animation: rotateIn var(--transition-normal);
+}
+
+/* --- 脉冲/加载动画类 --- */
+
+/* 柔和脉冲 - 用于流式光标 */
+.animate-pulse-soft {
+	animation: pulse-soft var(--duration-pulse) var(--ease-in-out) infinite;
+}
+
+/* 呼吸脉冲 - 用于连接状态 */
+.animate-pulse-glow {
+	animation: pulse-glow var(--duration-pulse) var(--ease-in-out) infinite;
+}
+
+/* 加载旋转 */
+.animate-spin {
+	animation: spin var(--duration-spin) linear infinite;
+}
+
+/* 反向旋转 */
+.animate-spin-reverse {
+	animation: spin-reverse var(--duration-spin) linear infinite;
+}
+
+/* 摆动旋转 */
+.animate-spin-wobble {
+	animation: spin-wobble var(--duration-spin) var(--ease-in-out) infinite;
+}
+
+/* --- 弹跳/心跳动画类 --- */
+
+/* 弹跳效果 */
+.animate-bounce {
+	animation: bounce var(--duration-fast) var(--ease-spring);
+}
+
+/* 心跳效果 */
+.animate-heartbeat {
+	animation: heartbeat 1.3s var(--ease-in-out) infinite;
+}
+
+/* --- 骨架屏动画类 --- */
+
+/* 骨架屏闪烁 */
+.animate-skeleton {
+	background: linear-gradient(
+		90deg,
+		var(--color-neutral-200) 25%,
+		var(--color-neutral-100) 50%,
+		var(--color-neutral-200) 75%
+	);
+	background-size: 200% 100%;
+	animation: skeleton-shimmer var(--duration-shimmer) linear infinite;
+}
+
+/* --- 进度条动画类 --- */
+
+/* 进度条滑动 */
+.animate-progress {
+	animation: progress-slide 1.5s var(--ease-in-out) infinite;
+}
+
+/* ============================================
+   9. 交互状态类 - 按钮悬停/点击反馈
+   ============================================ */
+
+/* 可交互元素基础过渡 */
+.interactive {
+	transition: transform var(--transition-fast),
+	            opacity var(--transition-fast);
+}
+
+/* 悬停上浮效果 */
+.hover-lift {
+	transition: transform var(--transition-fast),
+	            box-shadow var(--transition-fast);
+}
+
+.hover-lift:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-md);
+}
+
+/* 按下下沉效果 */
+.press-scale:active {
+	transform: scale(0.97);
+}
+
+/* 波纹容器 */
+.ripple-container {
+	position: relative;
+	overflow: hidden;
+}
+
+/* 波纹元素 */
+.ripple {
+	position: absolute;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: 0.3;
+	animation: ripple 0.6s var(--ease-out);
+	pointer-events: none;
+}
+
+/* 焦点环效果 */
+.focus-ring:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--color-primary-ring);
+}
+
+/* 组合交互效果 */
+.btn-interactive {
+	transition: transform var(--transition-fast),
+	            box-shadow var(--transition-fast),
+	            background-color var(--transition-fast);
+}
+
+.btn-interactive:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-sm);
+}
+
+.btn-interactive:active {
+	transform: scale(0.97) translateY(0);
+	box-shadow: none;
+}
+
+/* 错误抖动 */
+.shake-error {
+	animation: shake 0.4s var(--ease-in-out);
+}
+
+/* 注意力吸引 */
+.attract-attention {
+	animation: wiggle 0.5s var(--ease-in-out);
+}
+
+/* ============================================
+   10. 动画编排类 - 错开动画
+   ============================================ */
+
+/* 错开动画延迟 */
+.stagger-1 { animation-delay: var(--delay-fast); }
+.stagger-2 { animation-delay: var(--delay-normal); }
+.stagger-3 { animation-delay: var(--delay-slow); }
+.stagger-4 { animation-delay: var(--delay-slower); }
+.stagger-5 { animation-delay: var(--delay-slowest); }
+
+/* 列表项错开动画 */
+.stagger-list > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-list > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-list > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-list > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-list > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-list > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-list > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-list > *:nth-child(8) { animation-delay: 350ms; }
+.stagger-list > *:nth-child(9) { animation-delay: 400ms; }
+.stagger-list > *:nth-child(10) { animation-delay: 450ms; }
+
+/* ============================================
+   11. Reduced Motion 支持
+   用户偏好减少动画时，禁用或大幅简化动画
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+	/* 禁用所有动画关键帧 */
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+
+	/* 保留必要的状态变化（无动画） */
+	.animate-fade-in,
+	.animate-fade-in-up,
+	.animate-fade-in-down,
+	.animate-fade-in-left,
+	.animate-fade-in-right,
+	.animate-slide-in-left,
+	.animate-slide-in-right,
+	.animate-slide-in-up,
+	.animate-slide-in-down,
+	.animate-scale-in,
+	.animate-scale-in-center,
+	.animate-rotate-in {
+		animation: none;
+		opacity: 1;
+		transform: none;
+	}
+
+	/* 交互效果简化 */
+	.btn-interactive:hover,
+	.btn-interactive:active,
+	.hover-lift:hover,
+	.press-scale:active {
+		transform: none;
+	}
+
+	/* 骨架屏静止 */
+	.animate-skeleton {
+		animation: none;
+		background: var(--color-neutral-200);
+	}
+
+	/* 进度条静止 */
+	.animate-progress {
+		animation: none;
+	}
+}
+
+/* ============================================
+   12. 主题切换过渡
+   应用于 html 元素，实现平滑的主题切换
+   ============================================ */
+html {
+	transition: var(--theme-transition);
+}
+
+html.theme-transitioning * {
+	transition: var(--theme-transition) !important;
+}
+
+/* ============================================
+   13. 性能优化 - GPU 加速
+   提示浏览器为动画元素启用硬件加速
+   ============================================ */
+.will-change-transform {
+	will-change: transform;
+}
+
+.will-change-opacity {
+	will-change: opacity;
+}
+
+.gpu-accelerated {
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000px;
+}

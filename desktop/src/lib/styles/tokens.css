@@ -1,0 +1,529 @@
+/**
+ * 设计系统颜色 Tokens
+ * 
+ * 品牌主色调：温暖橙色 #FF6B35 - 活力、创造力、热情
+ * 
+ * 设计理念：
+ * - 温暖友好的视觉体验
+ * - 高对比度确保可读性
+ * - 语义化颜色系统
+ * - 支持 light/dark 双主题
+ */
+
+/* ============================================
+   Light Theme (默认)
+   ============================================ */
+:root {
+	/* ============================================
+	   品牌色 - 温暖橙色
+	   ============================================ */
+	--color-brand-50: #FFF5F0;
+	--color-brand-100: #FFE9DF;
+	--color-brand-200: #FFD1BF;
+	--color-brand-300: #FFB38A;
+	--color-brand-400: #FF8C55;
+	--color-brand-500: #FF6B35;  /* 主品牌色 */
+	--color-brand-600: #E55A2B;
+	--color-brand-700: #C04A23;
+	--color-brand-800: #9A3C1C;
+	--color-brand-900: #7A3018;
+
+	/* ============================================
+	   语义化颜色 - Primary
+	   主要交互元素、按钮、链接
+	   ============================================ */
+	--color-primary: var(--color-brand-500);
+	--color-primary-light: var(--color-brand-400);
+	--color-primary-dark: var(--color-brand-600);
+	--color-primary-hover: var(--color-brand-600);
+	--color-primary-active: var(--color-brand-700);
+
+	/* Primary 半透明 - 用于背景、焦点环、阴影 */
+	--color-primary-bg: rgba(255, 107, 53, 0.08);
+	--color-primary-ring: rgba(255, 107, 53, 0.15);
+	--color-primary-ring-hover: rgba(255, 107, 53, 0.25);
+	--color-primary-shadow: rgba(255, 107, 53, 0.20);
+	--color-primary-shadow-hover: rgba(255, 107, 53, 0.30);
+
+	/* ============================================
+	   语义化颜色 - Secondary
+	   次要元素、辅助按钮
+	   ============================================ */
+	--color-secondary: #FF9F6B;
+	--color-secondary-light: #FFB899;
+	--color-secondary-dark: #E58A5A;
+	--color-secondary-hover: var(--color-secondary-dark);
+	--color-secondary-active: #CC7A50;
+	--color-secondary-bg: rgba(255, 159, 107, 0.10);
+
+	/* ============================================
+	   语义化颜色 - Accent
+	   强调、高亮、特殊标记
+	   ============================================ */
+	--color-accent: #FFD166;
+	--color-accent-light: #FFDf99;
+	--color-accent-dark: #E5B85C;
+	--color-accent-hover: var(--color-accent-dark);
+	--color-accent-active: #CCA652;
+	--color-accent-bg: rgba(255, 209, 102, 0.12);
+
+	/* ============================================
+	   语义化颜色 - Success
+	   成功状态、确认操作
+	   ============================================ */
+	--color-success: #22C55E;
+	--color-success-light: #4ADE80;
+	--color-success-dark: #16A34A;
+	--color-success-hover: var(--color-success-dark);
+	--color-success-active: #15803D;
+	--color-success-bg: rgba(34, 197, 94, 0.10);
+	--color-success-ring: rgba(34, 197, 94, 0.20);
+
+	/* ============================================
+	   语义化颜色 - Warning
+	   警告状态、注意事项
+	   ============================================ */
+	--color-warning: #F59E0B;
+	--color-warning-light: #FBBF24;
+	--color-warning-dark: #D97706;
+	--color-warning-hover: var(--color-warning-dark);
+	--color-warning-active: #B45309;
+	--color-warning-bg: rgba(245, 158, 11, 0.10);
+	--color-warning-ring: rgba(245, 158, 11, 0.20);
+
+	/* ============================================
+	   语义化颜色 - Error
+	   错误状态、危险操作
+	   ============================================ */
+	--color-error: #EF4444;
+	--color-error-light: #F87171;
+	--color-error-dark: #DC2626;
+	--color-error-hover: var(--color-error-dark);
+	--color-error-active: #B91C1C;
+	--color-error-bg: rgba(239, 68, 68, 0.10);
+	--color-error-ring: rgba(239, 68, 68, 0.20);
+	--color-error-shadow: rgba(239, 68, 68, 0.25);
+
+	/* ============================================
+	   语义化颜色 - Info
+	   信息提示、帮助
+	   ============================================ */
+	--color-info: #3B82F6;
+	--color-info-light: #60A5FA;
+	--color-info-dark: #2563EB;
+	--color-info-hover: var(--color-info-dark);
+	--color-info-active: #1D4ED8;
+	--color-info-bg: rgba(59, 130, 246, 0.10);
+	--color-info-ring: rgba(59, 130, 246, 0.20);
+
+	/* ============================================
+	   Surface 颜色 - 背景
+	   ============================================ */
+	--color-bg-primary: #FFFCFA;    /* 页面主背景 - 温暖的白色 */
+	--color-bg-secondary: #FFF8F5;  /* 次级背景 - 带有橙色调 */
+	--color-bg-tertiary: #FFF0EB;   /* 三级背景 - 更明显的橙色调 */
+	--color-bg-elevated: #FFFFFF;   /* 浮动元素背景 - 纯白 */
+	--color-bg-overlay: rgba(255, 107, 53, 0.04); /* 叠加层背景 */
+
+	/* ============================================
+	   Surface 颜色 - 前景/文字
+	   ============================================ */
+	--color-fg-primary: #1F1A17;    /* 主要文字 - 温暖的深色 */
+	--color-fg-secondary: #5C5652;  /* 次要文字 */
+	--color-fg-tertiary: #8A8380;   /* 三级文字 */
+	--color-fg-muted: #A9A5A2;      /* 弱化文字 */
+	--color-fg-inverse: #FFFCFA;    /* 反色文字 - 用于深色背景 */
+
+	/* ============================================
+	   Surface 颜色 - 卡片
+	   ============================================ */
+	--color-card: #FFFFFF;
+	--color-card-hover: #FFF8F5;
+	--color-card-active: #FFF0EB;
+	--color-card-foreground: var(--color-fg-primary);
+
+	/* ============================================
+	   Surface 颜色 - 边框
+	   ============================================ */
+	--color-border: #F0E6E0;
+	--color-border-hover: #E0D4CC;
+	--color-border-focus: var(--color-brand-400);
+	--color-border-active: var(--color-brand-500);
+
+	/* ============================================
+	   shadcn-svelte 兼容变量 (HSL 格式)
+	   ============================================ */
+	--background: 20 33% 99%;         /* #FFFCFA */
+	--foreground: 20 10% 12%;         /* #1F1A17 */
+	--card: 0 0% 100%;                /* #FFFFFF */
+	--card-foreground: 20 10% 12%;    /* #1F1A17 */
+	--popover: 0 0% 100%;             /* #FFFFFF */
+	--popover-foreground: 20 10% 12%; /* #1F1A17 */
+	--primary: 21 100% 60%;           /* #FF6B35 */
+	--primary-foreground: 20 33% 99%; /* #FFFCFA */
+	--secondary: 25 60% 94%;          /* #FFF8F5 */
+	--secondary-foreground: 20 10% 12%; /* #1F1A17 */
+	--muted: 25 60% 94%;              /* #FFF8F5 */
+	--muted-foreground: 20 10% 50%;   /* #8A8380 */
+	--accent: 48 100% 64%;            /* #FFD166 */
+	--accent-foreground: 20 10% 12%;  /* #1F1A17 */
+	--destructive: 0 84% 60%;         /* #EF4444 */
+	--destructive-foreground: 20 33% 99%; /* #FFFCFA */
+	--border: 20 30% 91%;             /* #F0E6E0 */
+	--input: 20 30% 91%;              /* #F0E6E0 */
+	--ring: 21 100% 60%;              /* #FF6B35 */
+	--radius: 0.625rem;
+
+	/* ============================================
+	   中性色 - 温暖灰色调
+	   ============================================ */
+	--color-neutral-50: #FAF8F7;
+	--color-neutral-100: #F5F2F0;
+	--color-neutral-200: #E8E4E0;
+	--color-neutral-300: #D4CFC9;
+	--color-neutral-400: #A9A5A2;
+	--color-neutral-500: #7A7774;
+	--color-neutral-600: #5C5A58;
+	--color-neutral-700: #4A4846;
+	--color-neutral-800: #343230;
+	--color-neutral-900: #252423;
+
+	/* ============================================
+	   消息气泡颜色 - 匹配品牌色
+	   ============================================ */
+	--user-bubble: var(--color-brand-500);
+	--user-bubble-foreground: var(--color-fg-inverse);
+	--ai-bubble: var(--color-bg-secondary);
+	--ai-bubble-foreground: var(--color-fg-primary);
+
+	/* 用户气泡内半透明效果 */
+	--user-bubble-overlay-15: rgba(255, 252, 250, 0.15);
+	--user-bubble-overlay-20: rgba(255, 252, 250, 0.20);
+	--user-bubble-overlay-25: rgba(255, 252, 250, 0.25);
+	--user-bubble-overlay-40: rgba(255, 252, 250, 0.40);
+	--user-bubble-overlay-90: rgba(255, 252, 250, 0.90);
+	--user-bubble-overlay-95: rgba(255, 252, 250, 0.95);
+	--user-bubble-code-bg: rgba(31, 26, 23, 0.30);
+
+	/* 流式响应光标 */
+	--streaming-cursor: var(--color-primary);
+
+	/* ============================================
+	   代码块主题 - 温暖暗色调
+	   ============================================ */
+	--code-bg: #2A2520;
+	--code-header-bg: #34302B;
+	--code-border: #4A4640;
+	--code-text: #F5F2F0;
+	--code-muted: #A9A5A2;
+	--code-highlight: var(--color-brand-400);
+	--code-scrollbar: #4A4640;
+	--code-scrollbar-hover: #5C5652;
+}
+
+/* ============================================
+   Dark Theme
+   ============================================ */
+[data-theme="dark"],
+.dark {
+	/* ============================================
+	   品牌色 - 暗色模式下稍微提亮
+	   ============================================ */
+	--color-brand-50: #4A2A1A;
+	--color-brand-100: #5C3520;
+	--color-brand-200: #7A4528;
+	--color-brand-300: #995A35;
+	--color-brand-400: #BF7545;
+	--color-brand-500: #FF8C55;  /* 暗色模式下使用更亮的橙色 */
+	--color-brand-600: #FF6B35;
+	--color-brand-700: #E55A2B;
+	--color-brand-800: #CC4F26;
+	--color-brand-900: #B34520;
+
+	/* ============================================
+	   语义化颜色 - Primary
+	   ============================================ */
+	--color-primary: var(--color-brand-500);
+	--color-primary-light: var(--color-brand-400);
+	--color-primary-dark: var(--color-brand-600);
+	--color-primary-hover: var(--color-brand-600);
+	--color-primary-active: var(--color-brand-700);
+
+	/* Primary 半透明 */
+	--color-primary-bg: rgba(255, 140, 85, 0.12);
+	--color-primary-ring: rgba(255, 140, 85, 0.25);
+	--color-primary-ring-hover: rgba(255, 140, 85, 0.35);
+	--color-primary-shadow: rgba(255, 140, 85, 0.25);
+	--color-primary-shadow-hover: rgba(255, 140, 85, 0.35);
+
+	/* ============================================
+	   语义化颜色 - Secondary
+	   ============================================ */
+	--color-secondary: #FFB899;
+	--color-secondary-light: #FFCDB3;
+	--color-secondary-dark: #FF9F6B;
+	--color-secondary-hover: var(--color-secondary-dark);
+	--color-secondary-active: #E58A5A;
+	--color-secondary-bg: rgba(255, 184, 153, 0.12);
+
+	/* ============================================
+	   语义化颜色 - Accent
+	   ============================================ */
+	--color-accent: #FFE0A0;
+	--color-accent-light: #FFEDC0;
+	--color-accent-dark: #FFD166;
+	--color-accent-hover: var(--color-accent-dark);
+	--color-accent-active: #E5B85C;
+	--color-accent-bg: rgba(255, 224, 160, 0.12);
+
+	/* ============================================
+	   语义化颜色 - Success
+	   ============================================ */
+	--color-success: #4ADE80;
+	--color-success-light: #6EE7A0;
+	--color-success-dark: #22C55E;
+	--color-success-hover: var(--color-success-dark);
+	--color-success-active: #16A34A;
+	--color-success-bg: rgba(74, 222, 128, 0.12);
+	--color-success-ring: rgba(74, 222, 128, 0.25);
+
+	/* ============================================
+	   语义化颜色 - Warning
+	   ============================================ */
+	--color-warning: #FBBF24;
+	--color-warning-light: #FCD34D;
+	--color-warning-dark: #F59E0B;
+	--color-warning-hover: var(--color-warning-dark);
+	--color-warning-active: #D97706;
+	--color-warning-bg: rgba(251, 191, 36, 0.12);
+	--color-warning-ring: rgba(251, 191, 36, 0.25);
+
+	/* ============================================
+	   语义化颜色 - Error
+	   ============================================ */
+	--color-error: #F87171;
+	--color-error-light: #FCA5A5;
+	--color-error-dark: #EF4444;
+	--color-error-hover: var(--color-error-dark);
+	--color-error-active: #DC2626;
+	--color-error-bg: rgba(248, 113, 113, 0.12);
+	--color-error-ring: rgba(248, 113, 113, 0.25);
+	--color-error-shadow: rgba(248, 113, 113, 0.30);
+
+	/* ============================================
+	   语义化颜色 - Info
+	   ============================================ */
+	--color-info: #60A5FA;
+	--color-info-light: #93C5FD;
+	--color-info-dark: #3B82F6;
+	--color-info-hover: var(--color-info-dark);
+	--color-info-active: #2563EB;
+	--color-info-bg: rgba(96, 165, 250, 0.12);
+	--color-info-ring: rgba(96, 165, 250, 0.25);
+
+	/* ============================================
+	   Surface 颜色 - 背景
+	   ============================================ */
+	--color-bg-primary: #1A1816;    /* 暗色主背景 */
+	--color-bg-secondary: #242120;  /* 次级背景 */
+	--color-bg-tertiary: #2E2A28;   /* 三级背景 */
+	--color-bg-elevated: #2A2520;   /* 浮动元素背景 */
+	--color-bg-overlay: rgba(255, 140, 85, 0.06);
+
+	/* ============================================
+	   Surface 颜色 - 前景/文字
+	   ============================================ */
+	--color-fg-primary: #F5F2F0;    /* 主要文字 */
+	--color-fg-secondary: #C4BFB8;  /* 次要文字 */
+	--color-fg-tertiary: #9A9590;   /* 三级文字 */
+	--color-fg-muted: #6A665F;      /* 弱化文字 */
+	--color-fg-inverse: #1A1816;    /* 反色文字 */
+
+	/* ============================================
+	   Surface 颜色 - 卡片
+	   ============================================ */
+	--color-card: #242120;
+	--color-card-hover: #2E2A28;
+	--color-card-active: #34302B;
+	--color-card-foreground: var(--color-fg-primary);
+
+	/* ============================================
+	   Surface 颜色 - 边框
+	   ============================================ */
+	--color-border: #3A3633;
+	--color-border-hover: #4A4640;
+	--color-border-focus: var(--color-brand-400);
+	--color-border-active: var(--color-brand-500);
+
+	/* ============================================
+	   shadcn-svelte 兼容变量 (HSL 格式) - Dark
+	   ============================================ */
+	--background: 20 10% 10%;        /* #1A1816 */
+	--foreground: 30 10% 94%;        /* #F5F2F0 */
+	--card: 20 10% 14%;              /* #242120 */
+	--card-foreground: 30 10% 94%;   /* #F5F2F0 */
+	--popover: 20 10% 12%;           /* #2A2520 */
+	--popover-foreground: 30 10% 94%; /* #F5F2F0 */
+	--primary: 21 100% 66%;          /* #FF8C55 */
+	--primary-foreground: 20 10% 10%; /* #1A1816 */
+	--secondary: 20 10% 18%;         /* #34302B */
+	--secondary-foreground: 30 10% 94%; /* #F5F2F0 */
+	--muted: 20 10% 18%;             /* #34302B */
+	--muted-foreground: 20 8% 50%;   /* #9A9590 */
+	--accent: 48 100% 66%;           /* #FFE0A0 */
+	--accent-foreground: 20 10% 10%; /* #1A1816 */
+	--destructive: 0 62% 50%;        /* #F87171 */
+	--destructive-foreground: 30 10% 94%; /* #F5F2F0 */
+	--border: 20 10% 22%;            /* #3A3633 */
+	--input: 20 10% 22%;             /* #3A3633 */
+	--ring: 21 100% 66%;             /* #FF8C55 */
+
+	/* ============================================
+	   中性色 - 暗色调
+	   ============================================ */
+	--color-neutral-50: #2E2A28;
+	--color-neutral-100: #3A3633;
+	--color-neutral-200: #4A4640;
+	--color-neutral-300: #5C5652;
+	--color-neutral-400: #7A7774;
+	--color-neutral-500: #A9A5A2;
+	--color-neutral-600: #C4BFB8;
+	--color-neutral-700: #D4CFC9;
+	--color-neutral-800: #E8E4E0;
+	--color-neutral-900: #F5F2F0;
+
+	/* ============================================
+	   消息气泡颜色 - 暗色模式
+	   ============================================ */
+	--user-bubble: var(--color-brand-500);
+	--user-bubble-foreground: var(--color-fg-inverse);
+	--ai-bubble: var(--color-bg-secondary);
+	--ai-bubble-foreground: var(--color-fg-primary);
+
+	/* 用户气泡内半透明效果 */
+	--user-bubble-overlay-15: rgba(26, 24, 22, 0.15);
+	--user-bubble-overlay-20: rgba(26, 24, 22, 0.20);
+	--user-bubble-overlay-25: rgba(26, 24, 22, 0.25);
+	--user-bubble-overlay-40: rgba(26, 24, 22, 0.40);
+	--user-bubble-overlay-90: rgba(26, 24, 22, 0.90);
+	--user-bubble-overlay-95: rgba(26, 24, 22, 0.95);
+	--user-bubble-code-bg: rgba(245, 242, 240, 0.15);
+
+	/* ============================================
+	   代码块主题 - 暗色模式
+	   ============================================ */
+	--code-bg: #1A1816;
+	--code-header-bg: #242120;
+	--code-border: #3A3633;
+	--code-text: #F5F2F0;
+	--code-muted: #9A9590;
+	--code-highlight: var(--color-brand-400);
+	--code-scrollbar: #3A3633;
+	--code-scrollbar-hover: #4A4640;
+}
+
+/* ============================================
+   系统主题偏好检测
+   当用户未手动设置主题时，跟随系统偏好
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		/* 继承 dark theme 的所有变量 */
+		--color-bg-primary: #1A1816;
+		--color-bg-secondary: #242120;
+		--color-bg-tertiary: #2E2A28;
+		--color-bg-elevated: #2A2520;
+
+		--color-fg-primary: #F5F2F0;
+		--color-fg-secondary: #C4BFB8;
+		--color-fg-tertiary: #9A9590;
+
+		--color-border: #3A3633;
+		--color-border-hover: #4A4640;
+
+		/* shadcn-svelte 变量 */
+		--background: 20 10% 10%;
+		--foreground: 30 10% 94%;
+		--card: 20 10% 14%;
+		--card-foreground: 30 10% 94%;
+		--popover: 20 10% 12%;
+		--popover-foreground: 30 10% 94%;
+		--primary: 21 100% 66%;
+		--primary-foreground: 20 10% 10%;
+		--secondary: 20 10% 18%;
+		--secondary-foreground: 30 10% 94%;
+		--muted: 20 10% 18%;
+		--muted-foreground: 20 8% 50%;
+		--accent: 48 100% 66%;
+		--accent-foreground: 20 10% 10%;
+		--destructive: 0 62% 50%;
+		--destructive-foreground: 30 10% 94%;
+		--border: 20 10% 22%;
+		--input: 20 10% 22%;
+		--ring: 21 100% 66%;
+
+		/* 消息气泡 */
+		--ai-bubble: #242120;
+		--ai-bubble-foreground: #F5F2F0;
+	}
+}
+
+/* ============================================
+   工具类 - 品牌色快速应用
+   ============================================ */
+.text-brand { color: var(--color-brand-500); }
+.text-brand-light { color: var(--color-brand-400); }
+.text-brand-dark { color: var(--color-brand-600); }
+
+.bg-brand { background-color: var(--color-brand-500); }
+.bg-brand-light { background-color: var(--color-brand-100); }
+.bg-brand-dark { background-color: var(--color-brand-700); }
+
+.border-brand { border-color: var(--color-brand-500); }
+.border-brand-light { border-color: var(--color-brand-300); }
+.border-brand-dark { border-color: var(--color-brand-700); }
+
+/* 悬停效果 */
+.hover\:bg-brand:hover { background-color: var(--color-brand-500); }
+.hover\:text-brand:hover { color: var(--color-brand-500); }
+
+/* Focus ring */
+.focus\:ring-brand:focus {
+	outline-color: var(--color-primary-ring);
+	box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+/* ============================================
+   工具类 - 语义色快速应用
+   ============================================ */
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-error { color: var(--color-error); }
+.text-info { color: var(--color-info); }
+
+.bg-success { background-color: var(--color-success-bg); }
+.bg-warning { background-color: var(--color-warning-bg); }
+.bg-error { background-color: var(--color-error-bg); }
+.bg-info { background-color: var(--color-info-bg); }
+
+.border-success { border-color: var(--color-success); }
+.border-warning { border-color: var(--color-warning); }
+.border-error { border-color: var(--color-error); }
+.border-info { border-color: var(--color-info); }
+
+/* ============================================
+   工具类 - Surface 颜色快速应用
+   ============================================ */
+.text-fg-primary { color: var(--color-fg-primary); }
+.text-fg-secondary { color: var(--color-fg-secondary); }
+.text-fg-tertiary { color: var(--color-fg-tertiary); }
+.text-fg-muted { color: var(--color-fg-muted); }
+
+.bg-primary { background-color: var(--color-bg-primary); }
+.bg-secondary { background-color: var(--color-bg-secondary); }
+.bg-tertiary { background-color: var(--color-bg-tertiary); }
+.bg-elevated { background-color: var(--color-bg-elevated); }
+
+.border-default { border-color: var(--color-border); }
+.border-hover { border-color: var(--color-border-hover); }
+.border-focus { border-color: var(--color-border-focus); }

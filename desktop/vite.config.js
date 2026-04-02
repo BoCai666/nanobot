@@ -19,6 +19,17 @@ export default defineConfig(async () => ({
     include: ["src/**/*.{test,spec}.{js,ts}"],
     environment: "jsdom",
     globals: true,
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{js,ts}"],
+      exclude: ["src/**/*.d.ts", "src/**/*.test.ts", "src/**/*.spec.ts"],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
