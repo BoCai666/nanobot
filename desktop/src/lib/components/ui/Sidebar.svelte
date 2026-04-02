@@ -162,7 +162,6 @@
 	<!-- 新建对话按钮 -->
 	<div class={cn("shrink-0", expanded ? "p-3" : "p-2")}>
 		<Button
-			variant="default"
 			class={cn(
 				"w-full transition-all duration-200",
 				expanded ? "" : "px-2"

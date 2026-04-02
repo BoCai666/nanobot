@@ -1,11 +1,11 @@
 <script lang="ts">
 	/**
 	 * LoadingState - 加载状态组件
-	 * 支持三种模式：spinner（默认）、skeleton（骨架屏）、dots（脉动点）
+	 * 支持四种模式：spinner（默认）、skeleton（骨架屏）、dots（脉动点）、pulse-glow（脉冲发光）
 	 */
 
 	interface Props {
-		mode?: 'spinner' | 'skeleton' | 'dots';
+		mode?: 'spinner' | 'skeleton' | 'dots' | 'pulse-glow';
 		message?: string;
 		size?: 'sm' | 'md' | 'lg';
 	}
@@ -14,9 +14,9 @@
 
 	// 尺寸映射
 	const sizeMap = {
-		sm: { spinner: '24px', skeleton: '40px', dots: '8px' },
-		md: { spinner: '32px', skeleton: '60px', dots: '12px' },
-		lg: { spinner: '48px', skeleton: '80px', dots: '16px' }
+		sm: { spinner: '24px', skeleton: '40px', dots: '8px', glow: '20px' },
+		md: { spinner: '32px', skeleton: '60px', dots: '12px', glow: '28px' },
+		lg: { spinner: '48px', skeleton: '80px', dots: '16px', glow: '36px' }
 	};
 </script>
 
@@ -54,6 +54,15 @@
 		{#if message}
 			<p class="loading-message">{message}</p>
 		{/if}
+
+	{:else if mode === 'pulse-glow'}
+		<!-- 脉冲发光效果 -->
+		<div class="pulse-glow-container">
+			<div class="pulse-glow-dot" style="width: {sizeMap[size].glow}; height: {sizeMap[size].glow};"></div>
+		</div>
+		{#if message}
+			<p class="loading-message">{message}</p>
+		{/if}
 	{/if}
 </div>
 
@@ -69,7 +78,7 @@
 
 	.loading-message {
 		font-size: var(--text-sm);
-		color: var(--color-text-tertiary);
+		color: var(--color-fg-tertiary);
 		margin: 0;
 		line-height: var(--leading-normal);
 		animation: pulse-text 2s ease-in-out infinite;
@@ -186,6 +195,30 @@
 		}
 	}
 
+	/* 脉冲发光样式 */
+	.pulse-glow-container {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.pulse-glow-dot {
+		border-radius: 50%;
+		background-color: var(--color-primary);
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			opacity: 1;
+			box-shadow: 0 0 0 0 var(--color-primary-shadow);
+		}
+		50% {
+			opacity: 0.7;
+			box-shadow: 0 0 12px 4px var(--color-primary-shadow);
+		}
+	}
+
 	@keyframes pulse-text {
 		0%, 100% {
 			opacity: 0.6;
@@ -201,6 +234,7 @@
 		.skeleton-line,
 		.skeleton-avatar,
 		.dot,
+		.pulse-glow-dot,
 		.loading-message {
 			animation: none;
 		}
@@ -216,6 +250,11 @@
 
 		.dot {
 			opacity: 0.6;
+		}
+
+		.pulse-glow-dot {
+			opacity: 0.8;
+			box-shadow: 0 0 8px 2px var(--color-primary-shadow);
 		}
 
 		.loading-message {

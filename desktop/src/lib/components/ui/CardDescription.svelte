@@ -9,7 +9,15 @@
 	let { class: className, children }: Props = $props();
 </script>
 
-<p class={cn("text-sm text-muted-foreground", className)}>
+<p
+	class={cn(
+		// 温暖的描述文字样式
+		"text-sm leading-relaxed",
+		// 使用设计系统次要前景色
+		"text-[var(--color-fg-secondary)]",
+		className
+	)}
+>
 	{#if children}
 		{@render children()}
 	{/if}

@@ -9,7 +9,13 @@
 	let { class: className, children }: Props = $props();
 </script>
 
-<div class={cn("p-6 pt-0", className)}>
+<div
+	class={cn(
+		// 使用设计系统间距
+		"p-5 pt-0",
+		className
+	)}
+>
 	{#if children}
 		{@render children()}
 	{/if}
