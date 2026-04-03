@@ -6,6 +6,8 @@
 	 * - 支持流式 Markdown（处理未完成的标签）
 	 * - 自动语法高亮代码块
 	 * - 支持明暗主题切换
+	 * - 支持图片点击预览
+	 * - 图片加载状态和错误处理
 	 * 
 	 * 用法:
 	 * <MarkdownRenderer content="# Hello\n\nThis is **bold** text." />
@@ -13,6 +15,7 @@
 	import { parseMarkdown } from "$lib/utils/markdown";
 	import { highlightCode } from "$lib/utils/shiki";
 	import { onMount, tick } from "svelte";
+	import ImagePreview from "./ImagePreview.svelte";
 
 	// Props
 	interface Props {
@@ -27,6 +30,21 @@
 	// 存储处理后的 HTML
 	let renderedHtml = $state("");
 	let containerRef: HTMLDivElement;
+
+	// 图片预览状态
+	let previewImage = $state<{
+		src: string;
+		alt: string;
+		open: boolean;
+		images: Array<{ src: string; alt: string }>;
+		currentIndex: number;
+	}>({
+		src: "",
+		alt: "",
+		open: false,
+		images: [],
+		currentIndex: 0
+	});
 
 	/**
 	 * 处理 Markdown 中的代码块，使用 Shiki 进行高亮
@@ -63,6 +81,158 @@
 		}
 
 		return tempDiv.innerHTML;
+	}
+
+	/**
+	 * 处理图片，添加包装器和加载状态
+	 */
+	function processImages(html: string): string {
+		// 创建临时 DOM 来解析 HTML
+		const tempDiv = document.createElement("div");
+		tempDiv.innerHTML = html;
+
+		// 查找所有图片
+		const images = tempDiv.querySelectorAll("img");
+
+		for (const img of images) {
+			const src = img.getAttribute("src") || "";
+			const alt = img.getAttribute("alt") || "";
+
+			// 创建图片包装器
+			const wrapper = document.createElement("span");
+			wrapper.className = "image-wrapper";
+			wrapper.setAttribute("data-image-src", src);
+			wrapper.setAttribute("data-image-alt", alt);
+
+			// 添加加载占位符
+			const placeholder = document.createElement("span");
+			placeholder.className = "image-placeholder";
+			placeholder.innerHTML = `
+				<span class="image-loading-spinner"></span>
+				<span class="image-loading-text">加载中...</span>
+			`;
+
+			// 包装原图
+			img.classList.add("markdown-image");
+			img.setAttribute("loading", "lazy");
+			
+			wrapper.appendChild(placeholder);
+			wrapper.appendChild(img);
+
+			// 替换原图
+			img.parentNode?.insertBefore(wrapper, img);
+			img.parentNode?.removeChild(img);
+		}
+
+		return tempDiv.innerHTML;
+	}
+
+	/**
+	 * 处理图片点击事件（事件委托）
+	 */
+	function handleImageClick(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		const wrapper = target.closest(".image-wrapper") as HTMLElement;
+		
+		if (wrapper) {
+			const src = wrapper.getAttribute("data-image-src") || "";
+			const alt = wrapper.getAttribute("data-image-alt") || "";
+			
+			if (src) {
+				// 收集所有图片
+				const allImages = containerRef.querySelectorAll(".image-wrapper");
+				const images: Array<{ src: string; alt: string }> = [];
+				let clickedIndex = 0;
+
+				allImages.forEach((imgWrapper, index) => {
+					const imgSrc = imgWrapper.getAttribute("data-image-src") || "";
+					const imgAlt = imgWrapper.getAttribute("data-image-alt") || "";
+					if (imgSrc) {
+						images.push({ src: imgSrc, alt: imgAlt });
+						if (imgWrapper === wrapper) {
+							clickedIndex = index;
+						}
+					}
+				});
+
+				// 打开图片预览
+				previewImage = {
+					src,
+					alt,
+					open: true,
+					images,
+					currentIndex: clickedIndex
+				};
+			}
+		}
+	}
+
+	/**
+	 * 关闭图片预览
+	 */
+	function closeImagePreview() {
+		previewImage = {
+			...previewImage,
+			open: false
+		};
+	}
+
+	/**
+	 * 处理图片导航
+	 */
+	function handleImageNavigate(index: number) {
+		if (previewImage.images[index]) {
+			previewImage = {
+				...previewImage,
+				src: previewImage.images[index].src,
+				alt: previewImage.images[index].alt,
+				currentIndex: index
+			};
+		}
+	}
+
+	/**
+	 * 处理图片加载事件
+	 */
+	function handleImageLoad(event: Event) {
+		const img = event.target as HTMLImageElement;
+		const wrapper = img.closest(".image-wrapper");
+		
+		if (wrapper) {
+			// 隐藏加载占位符
+			const placeholder = wrapper.querySelector(".image-placeholder");
+			if (placeholder) {
+				(placeholder as HTMLElement).style.display = "none";
+			}
+			// 显示图片
+			img.style.opacity = "1";
+		}
+	}
+
+	/**
+	 * 处理图片加载错误
+	 */
+	function handleImageError(event: Event) {
+		const img = event.target as HTMLImageElement;
+		const wrapper = img.closest(".image-wrapper");
+		
+		if (wrapper) {
+			// 替换占位符为错误提示
+			const placeholder = wrapper.querySelector(".image-placeholder");
+			if (placeholder) {
+				placeholder.innerHTML = `
+					<svg class="image-error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+						<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+						<circle cx="8.5" cy="8.5" r="1.5"/>
+						<polyline points="21 15 16 10 5 21"/>
+					</svg>
+					<span class="image-error-text">图片加载失败</span>
+				`;
+				placeholder.classList.add("error");
+			}
+			// 隐藏原图
+			img.style.display = "none";
+		}
 	}
 
 	/**
@@ -145,7 +315,12 @@
 			const rawHtml = parseMarkdown(sanitizedContent);
 
 			// 高亮代码块
-			renderedHtml = await processCodeBlocks(rawHtml);
+			let processedHtml = await processCodeBlocks(rawHtml);
+
+			// 处理图片（添加包装器和加载状态）
+			processedHtml = processImages(processedHtml);
+
+			renderedHtml = processedHtml;
 		} catch (error) {
 			console.error("Markdown 渲染失败:", error);
 			// 出错时显示原始文本
@@ -170,6 +345,29 @@
 		renderMarkdown();
 	});
 
+	// 设置图片事件监听器
+	$effect(() => {
+		if (containerRef && renderedHtml) {
+			// 使用事件委托监听图片点击
+			containerRef.addEventListener("click", handleImageClick);
+
+			// 监听所有图片的加载事件
+			const images = containerRef.querySelectorAll(".markdown-image");
+			images.forEach((img) => {
+				img.addEventListener("load", handleImageLoad);
+				img.addEventListener("error", handleImageError);
+			});
+
+			return () => {
+				containerRef.removeEventListener("click", handleImageClick);
+				images.forEach((img) => {
+					img.removeEventListener("load", handleImageLoad);
+					img.removeEventListener("error", handleImageError);
+				});
+			};
+		}
+	});
+
 	// 初始化时预加载 Shiki
 	onMount(() => {
 		renderMarkdown();
@@ -184,6 +382,17 @@
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html renderedHtml}
 </div>
+
+<!-- 图片预览模态框 -->
+<ImagePreview
+	src={previewImage.src}
+	alt={previewImage.alt}
+	open={previewImage.open}
+	onClose={closeImagePreview}
+	images={previewImage.images}
+	currentIndex={previewImage.currentIndex}
+	onNavigate={handleImageNavigate}
+/>
 
 <style>
 	.markdown-content {
@@ -405,6 +614,135 @@
 		max-width: 100%;
 		height: auto;
 		border-radius: var(--radius-md);
+	}
+
+	/* 图片包装器 */
+	.markdown-content :global(.image-wrapper) {
+		position: relative;
+		display: inline-block;
+		max-width: 100%;
+		margin: var(--space-2) 0;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		cursor: pointer;
+		transition: transform var(--transition-fast);
+	}
+
+	.markdown-content :global(.image-wrapper:hover) {
+		transform: scale(1.01);
+	}
+
+	.markdown-content :global(.image-wrapper:hover::after) {
+		content: "🔍";
+		position: absolute;
+		top: var(--space-2);
+		right: var(--space-2);
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.6);
+		border-radius: var(--radius-md);
+		font-size: var(--text-sm);
+		animation: fadeIn 0.2s ease-out;
+	}
+
+	.markdown-content :global(.image-wrapper:hover::before) {
+		content: "Ctrl+滚轮缩放";
+		position: absolute;
+		bottom: var(--space-2);
+		left: 50%;
+		transform: translateX(-50%);
+		padding: var(--space-1) var(--space-2);
+		background: rgba(0, 0, 0, 0.7);
+		color: rgba(255, 255, 255, 0.9);
+		border-radius: var(--radius-sm);
+		font-size: var(--text-xs);
+		white-space: nowrap;
+		opacity: 0;
+		animation: fadeInDelayed 0.5s ease-out 1s forwards;
+	}
+
+	@keyframes fadeInDelayed {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	/* 图片加载占位符 */
+	.markdown-content :global(.image-placeholder) {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-2);
+		min-width: 200px;
+		min-height: 150px;
+		padding: var(--space-4);
+		background: var(--color-bg-secondary);
+		border: 2px dashed var(--color-border);
+		border-radius: var(--radius-md);
+	}
+
+	.markdown-content :global(.image-placeholder.error) {
+		border-color: var(--color-error);
+		background: var(--color-error-bg);
+	}
+
+	.markdown-content :global(.image-loading-spinner) {
+		width: 24px;
+		height: 24px;
+		border: 2px solid var(--color-border);
+		border-top-color: var(--color-brand-500);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	.markdown-content :global(.image-loading-text) {
+		font-size: var(--text-xs);
+		color: var(--color-fg-secondary);
+	}
+
+	/* 图片错误图标 */
+	.markdown-content :global(.image-error-icon) {
+		width: 32px;
+		height: 32px;
+		color: var(--color-error);
+	}
+
+	.markdown-content :global(.image-error-text) {
+		font-size: var(--text-sm);
+		color: var(--color-error);
+	}
+
+	/* Markdown 图片 */
+	.markdown-content :global(.markdown-image) {
+		display: block;
+		max-width: 100%;
+		height: auto;
+		opacity: 0;
+		transition: opacity var(--duration-normal) var(--ease-out);
+		border-radius: var(--radius-md);
+	}
+
+	/* 加载动画 */
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	/* 换行 */
