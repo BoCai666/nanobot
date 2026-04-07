@@ -1,10 +1,15 @@
 <script lang="ts">
 	import { settingsStore, type ProviderConfig } from './settingsStore.svelte';
 	import { appState } from '$lib/stores/app';
+	import { onMount } from 'svelte';
 
 	// 密码可见性状态
 	let visibleKeys = $state<Record<string, boolean>>({});
 
+	// 组件挂载时从后端加载配置
+	onMount(() => {
+		settingsStore.loadFromBackend();
+	});
 	// 切换 API Key 可见性
 	function toggleKeyVisibility(providerName: string) {
 		visibleKeys[providerName] = !visibleKeys[providerName];
@@ -13,16 +18,33 @@
 	// 获取 Provider 图标
 	function getProviderIcon(providerName: string): string {
 		const icons: Record<string, string> = {
+			custom: '🔧',
+			azure_openai: '☁️',
 			openrouter: '🔌',
-			openai: '🤖',
-			anthropic: '🧠',
-			deepseek: '🔮',
-			groq: '⚡',
-			gemini: '✨',
+			aihubmix: '🔀',
 			siliconflow: '🌊',
+			volcengine: '🌋',
+			volcengine_coding_plan: '🌋',
+			byteplus: '🌍',
+			byteplus_coding_plan: '🌍',
+			anthropic: '🧠',
+			openai: '🤖',
+			openai_codex: '💻',
+			github_copilot: '🐙',
+			deepseek: '🔮',
+			gemini: '✨',
+			zhipu: '📊',
 			dashscope: '🌟',
 			moonshot: '🌙',
-			zhipu: '📊'
+			qianfan: '🔵',
+			qianfan_coding_plan: '🔵',
+			minimax: '🎯',
+			mistral: '🌀',
+			stepfun: '🚀',
+			vllm: '🖥️',
+			ollama: '🦙',
+			ovms: '⚙️',
+			groq: '⚡',
 		};
 		return icons[providerName] || '🔧';
 	}

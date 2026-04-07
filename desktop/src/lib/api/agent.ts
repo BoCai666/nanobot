@@ -28,8 +28,19 @@ export interface ChatResponse {
 // Agent 状态
 export interface AgentStatus {
 	running: boolean;
-	model?: string;
-	lastActivity?: string;
+}
+
+// Provider 信息（从后端 API 返回）
+export interface ProviderInfo {
+	name: string;
+	display_name: string;
+	configured: boolean;
+	api_base: string;
+	default_api_base: string;
+	is_gateway: boolean;
+	is_local: boolean;
+	is_direct: boolean;
+	is_oauth: boolean;
 }
 // Gateway 状态
 export interface GatewayStatus {
@@ -139,6 +150,58 @@ export class AgentAPI {
 
 		if (!response.ok) {
 			throw new Error(`Failed to get agent status: ${response.statusText}`);
+		}
+
+		return response.json();
+	}
+
+	/**
+	 * 获取 Provider 列表（从后端注册表动态获取）
+	 */
+	async getProviders(): Promise<ProviderInfo[]> {
+		const apiBase = await this.getApiBase();
+		const response = await fetch(`${apiBase}/api/config/providers`, {
+			method: 'GET',
+			signal: AbortSignal.timeout(5000),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to get providers: ${response.statusText}`);
+		}
+
+		return response.json();
+	}
+
+	/**
+	 * 获取完整配置（API key 已脱敏）
+	 */
+	async getConfig(): Promise<Record<string, unknown>> {
+		const apiBase = await this.getApiBase();
+		const response = await fetch(`${apiBase}/api/config`, {
+			method: 'GET',
+			signal: AbortSignal.timeout(5000),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to get config: ${response.statusText}`);
+		}
+
+		return response.json();
+	}
+
+	/**
+	 * 更新配置（部分更新，PUT）
+	 */
+	async updateConfig(updates: Record<string, unknown>): Promise<Record<string, unknown>> {
+		const apiBase = await this.getApiBase();
+		const response = await fetch(`${apiBase}/api/config`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(updates),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to update config: ${response.statusText}`);
 		}
 
 		return response.json();

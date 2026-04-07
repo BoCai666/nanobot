@@ -1,7 +1,10 @@
 /**
  * 设置面板状态管理
  * 使用 Svelte 5 runes 语法
+ * 从后端 API 动态加载 Provider 列表和配置
  */
+
+import { agentAPI, type ProviderInfo } from '$lib/api/agent';
 
 // 设置标签页类型
 export type SettingsTab = 'providers' | 'channels' | 'agent' | 'tools';
@@ -14,6 +17,9 @@ export interface ProviderConfig {
 	apiKey: string;
 	apiBase?: string;  // 高级模式
 	models?: string[]; // 支持的模型列表
+	isGateway?: boolean;
+	isLocal?: boolean;
+	isDirect?: boolean;
 }
 
 // Channel 配置类型
@@ -63,6 +69,39 @@ export interface AppConfig {
 	tools: ToolsConfig;
 }
 
+// 降级默认 Provider 列表（后端不可用时使用）
+const FALLBACK_PROVIDERS: ProviderConfig[] = [
+	{
+		name: 'openrouter',
+		displayName: 'OpenRouter',
+		enabled: true,
+		apiKey: '',
+		apiBase: 'https://openrouter.ai/api/v1',
+		isGateway: true,
+	},
+	{
+		name: 'openai',
+		displayName: 'OpenAI',
+		enabled: false,
+		apiKey: '',
+		apiBase: 'https://api.openai.com/v1',
+	},
+	{
+		name: 'anthropic',
+		displayName: 'Anthropic',
+		enabled: false,
+		apiKey: '',
+		apiBase: 'https://api.anthropic.com',
+	},
+	{
+		name: 'deepseek',
+		displayName: 'DeepSeek',
+		enabled: false,
+		apiKey: '',
+		apiBase: 'https://api.deepseek.com',
+	},
+];
+
 // 创建设置状态
 export function createSettingsStore() {
 	// 当前激活的标签页
@@ -71,57 +110,11 @@ export function createSettingsStore() {
 	// 是否有未保存的更改
 	let hasUnsavedChanges = $state(false);
 
+	// 是否已从后端加载配置
+	let loaded = $state(false);
+
 	// Provider 列表
-	let providers = $state<ProviderConfig[]>([
-		{
-			name: 'openrouter',
-			displayName: 'OpenRouter',
-			enabled: true,
-			apiKey: '',
-			apiBase: 'https://openrouter.ai/api/v1',
-			models: ['anthropic/claude-3-opus', 'anthropic/claude-3-sonnet', 'openai/gpt-4o']
-		},
-		{
-			name: 'openai',
-			displayName: 'OpenAI',
-			enabled: false,
-			apiKey: '',
-			apiBase: 'https://api.openai.com/v1',
-			models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo']
-		},
-		{
-			name: 'anthropic',
-			displayName: 'Anthropic',
-			enabled: false,
-			apiKey: '',
-			apiBase: 'https://api.anthropic.com',
-			models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307']
-		},
-		{
-			name: 'deepseek',
-			displayName: 'DeepSeek',
-			enabled: false,
-			apiKey: '',
-			apiBase: 'https://api.deepseek.com',
-			models: ['deepseek-chat', 'deepseek-coder']
-		},
-		{
-			name: 'groq',
-			displayName: 'Groq',
-			enabled: false,
-			apiKey: '',
-			apiBase: 'https://api.groq.com/openai/v1',
-			models: ['llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it']
-		},
-		{
-			name: 'gemini',
-			displayName: 'Google Gemini',
-			enabled: false,
-			apiKey: '',
-			apiBase: 'https://generativelanguage.googleapis.com/v1beta',
-			models: ['gemini-1.5-pro', 'gemini-1.5-flash']
-		}
-	]);
+	let providers = $state<ProviderConfig[]>([...FALLBACK_PROVIDERS]);
 
 	// Channel 配置
 	let channels = $state<ChannelConfig[]>([
@@ -164,8 +157,8 @@ export function createSettingsStore() {
 
 	// Agent 配置
 	let agent = $state<AgentConfig>({
-		defaultModel: 'anthropic/claude-3-opus',
-		defaultProvider: 'openrouter',
+		defaultModel: '',
+		defaultProvider: '',
 		temperature: 0.7,
 		maxTokens: 4096,
 		timezone: 'UTC',
@@ -180,6 +173,56 @@ export function createSettingsStore() {
 		searchProvider: 'brave',
 		searchApiKey: ''
 	});
+
+	/**
+	 * 从后端 API 加载配置
+	 * 同时获取 providers 列表和完整配置
+	 */
+	async function loadFromBackend(): Promise<void> {
+		if (loaded) return;
+
+		try {
+			// 并行获取 providers 和配置
+			const [backendProviders, config] = await Promise.all([
+				agentAPI.getProviders(),
+				agentAPI.getConfig(),
+			]);
+
+			// 将后端 ProviderInfo 转换为前端 ProviderConfig
+			providers = backendProviders
+				.filter((p: ProviderInfo) => !p.is_oauth)  // 过滤掉 OAuth 类型
+				.map((p: ProviderInfo) => ({
+					name: p.name,
+					displayName: p.display_name,
+					enabled: p.configured,
+					apiKey: '',  // API key 已脱敏，前端不显示
+					apiBase: p.api_base || p.default_api_base || undefined,
+					isGateway: p.is_gateway,
+					isLocal: p.is_local,
+					isDirect: p.is_direct,
+				}));
+
+			// 从完整配置中提取 agent defaults
+			const agentsConfig = config.agents as Record<string, unknown> | undefined;
+			const defaults = agentsConfig?.defaults as Record<string, unknown> | undefined;
+			if (defaults) {
+				agent = {
+					...agent,
+					defaultModel: (defaults.model as string) || '',
+					defaultProvider: (defaults.provider as string) || '',
+					temperature: (defaults.temperature as number) ?? 0.7,
+					maxTokens: (defaults.max_tokens as number) ?? 4096,
+					timezone: (defaults.timezone as string) || 'UTC',
+				};
+			}
+
+			loaded = true;
+		} catch (e) {
+			// 后端不可用，使用降级默认值
+			console.warn('[settingsStore] Failed to load from backend, using defaults:', e);
+			loaded = true;  // 标记为已加载，避免重复请求
+		}
+	}
 
 	// 设置当前标签页
 	function setActiveTab(tab: SettingsTab) {
@@ -271,18 +314,35 @@ export function createSettingsStore() {
 		hasUnsavedChanges = true;
 	}
 
-	// 保存配置（模拟）
+	// 保存配置到后端
 	async function saveConfig(): Promise<boolean> {
-		// 模拟保存延迟
-		await new Promise(resolve => setTimeout(resolve, 500));
-		console.log('配置已保存:', { providers, channels, agent, tools });
-		hasUnsavedChanges = false;
-		return true;
+		try {
+			await agentAPI.updateConfig({
+				providers: Object.fromEntries(
+					providers
+						.filter(p => p.enabled && p.apiKey)
+						.map(p => [p.name, { apiKey: p.apiKey, ...(p.apiBase ? { apiBase: p.apiBase } : {}) }])
+				),
+				agents: {
+					defaults: {
+						model: agent.defaultModel,
+						provider: agent.defaultProvider,
+						temperature: agent.temperature,
+						maxTokens: agent.maxTokens,
+						timezone: agent.timezone,
+					}
+				}
+			});
+			hasUnsavedChanges = false;
+			return true;
+		} catch (e) {
+			console.error('[settingsStore] Failed to save config:', e);
+			return false;
+		}
 	}
 
 	// 重置配置
 	function resetConfig() {
-		// 重置为默认值
 		hasUnsavedChanges = false;
 	}
 
@@ -305,9 +365,11 @@ export function createSettingsStore() {
 		get channels() { return channels; },
 		get agent() { return agent; },
 		get tools() { return tools; },
+		get loaded() { return loaded; },
 
 		// 方法
 		setActiveTab,
+		loadFromBackend,
 		updateProvider,
 		toggleProvider,
 		updateChannel,

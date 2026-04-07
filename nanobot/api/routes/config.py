@@ -21,6 +21,12 @@ class ProviderInfo(BaseModel):
     name: str
     display_name: str
     configured: bool
+    api_base: str = ""  # 用户配置的 api_base
+    default_api_base: str = ""  # 注册表中的默认 api_base
+    is_gateway: bool = False
+    is_local: bool = False
+    is_direct: bool = False
+    is_oauth: bool = False
 
 
 class ChannelInfo(BaseModel):
@@ -128,8 +134,14 @@ async def get_providers() -> list[ProviderInfo]:
         providers_list.append(
             ProviderInfo(
                 name=spec.name,
-                display_name=spec.display_name,
+                display_name=spec.display_name or spec.name.title(),
                 configured=is_configured,
+                api_base=provider_data.api_base if provider_data else "",
+                default_api_base=spec.default_api_base,
+                is_gateway=spec.is_gateway,
+                is_local=spec.is_local,
+                is_direct=spec.is_direct,
+                is_oauth=spec.is_oauth,
             )
         )
 
