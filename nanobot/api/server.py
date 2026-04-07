@@ -4,11 +4,19 @@ This module provides the HTTP API server for external integrations.
 """
 
 import asyncio
+import os
 import socket
 import sys
 import threading
 from contextlib import asynccontextmanager
 from typing import Any
+
+# Force UTF-8 on Windows to avoid GBK encoding errors with emoji/unicode
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    os.environ.setdefault("PYTHONUTF8", "1")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
 
 import uvicorn
 from fastapi import FastAPI

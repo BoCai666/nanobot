@@ -94,10 +94,13 @@
 		// 跟踪是否收到了实际内容
 		let receivedContent = false;
 
+		// 使用当前对话 ID 作为 session ID，确保上下文正确
+		const currentSessionId = appStore.currentConversationId || sessionId;
+
 		await agentAPI.chatStream(
 			{
 				message: content,
-				sessionId: sessionId,
+				sessionId: currentSessionId,
 				stream: true,
 			},
 			{
@@ -105,27 +108,27 @@
 					// 收到思考过程内容
 					chatContainerRef?.appendStreamingThinking(aiMessageId, thinking);
 				},
-				onDelta: async (delta: string) => {
-					// 第一次收到内容时，清除思考提示
-					if (!receivedContent) {
-						receivedContent = true;
-						// 清空之前的提示，重新开始
-						chatContainerRef?.clearStreamingContent(aiMessageId);
-					}
-					chatContainerRef?.appendStreamingContent(aiMessageId, delta);
-					// 记录流式回复到控制台
-					await logAiDelta(delta);
-				},
-				onDone: async () => {
-					// 如果没有收到任何内容，显示任务完成提示
-					if (!receivedContent) {
-						chatContainerRef?.clearStreamingContent(aiMessageId);
-						chatContainerRef?.appendStreamingContent(aiMessageId, '✅ 任务已完成');
-					}
-					chatContainerRef?.finishStreamingResponse(aiMessageId);
-					// 记录 AI 回复结束
-					await logAiResponseEnd();
-				},
+                onDelta: async (delta: string) => {
+                    // 第一次收到内容时，清除思考提示
+                    if (!receivedContent) {
+                        receivedContent = true;
+                        // 清空之前的提示，重新开始
+                        chatContainerRef?.clearStreamingContent(aiMessageId);
+                    }
+                    chatContainerRef?.appendStreamingContent(aiMessageId, String(delta));
+                    // 记录流式回复到控制台
+                    await logAiDelta(String(delta));
+                },
+                onDone: async () => {
+                    // 如果没有收到任何内容，显示任务完成提示
+                    if (!receivedContent) {
+                        chatContainerRef?.clearStreamingContent(aiMessageId);
+                        chatContainerRef?.appendStreamingContent(aiMessageId, '✅ 任务已完成');
+                    }
+                    chatContainerRef?.finishStreamingResponse(aiMessageId);
+                    // 记录 AI 回复结束
+                    await logAiResponseEnd();
+                },
 				onError: async (error: string) => {
 					chatContainerRef?.clearStreamingContent(aiMessageId);
 					chatContainerRef?.appendStreamingContent(aiMessageId, `❌ 错误: ${error}`);

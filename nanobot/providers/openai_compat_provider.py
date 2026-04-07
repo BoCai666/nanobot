@@ -639,6 +639,9 @@ class OpenAICompatProvider(LLMProvider):
                     if on_content_delta:
                         text = getattr(delta, "content", None)
                         if text:
+                            # DEBUG: 检查 LLM 返回的原始 delta 是否包含换行符
+                            if "\n" in text:
+                                print(f"[PROVIDER] delta with newline: {repr(text[:80])}")
                             await on_content_delta(text)
             return self._parse_chunks(chunks)
         except Exception as e:

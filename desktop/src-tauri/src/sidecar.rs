@@ -443,6 +443,7 @@ pub async fn start_sidecar(
     tracing::info!("[sidecar] Spawning sidecar with port {}...", port);
     let (mut rx, child) = sidecar_command
         .args(["--port", &port.to_string()])
+        .env("PYTHONUTF8", "1")
         .spawn()
         .map_err(|e| {
             // Update state on error

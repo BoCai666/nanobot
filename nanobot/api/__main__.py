@@ -15,6 +15,23 @@ Example:
     python -m nanobot.api --host 127.0.0.1 --port 8008
 """
 
+# Force UTF-8 on Windows BEFORE any other imports.
+# This prevents GBK encoding errors when LLM responses contain emoji/unicode.
+import os
+import sys
+
+if sys.platform == "win32":
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+    os.environ["PYTHONUTF8"] = "1"
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, io.UnsupportedOperation):
+        pass
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, io.UnsupportedOperation):
+        pass
+
 from nanobot.api.server import main
 
 if __name__ == "__main__":

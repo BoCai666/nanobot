@@ -20,26 +20,22 @@ export interface ChatRequest {
 	sessionId?: string;
 	stream?: boolean;
 }
-
 // 聊天响应（非流式）
 export interface ChatResponse {
 	content: string;
 	role: string;
 }
-
 // Agent 状态
 export interface AgentStatus {
 	running: boolean;
 	model?: string;
 	lastActivity?: string;
 }
-
 // Gateway 状态
 export interface GatewayStatus {
 	running: boolean;
 	channels: Record<string, { enabled: boolean; running: boolean }>;
 }
-
 // SSE 回调
 export interface StreamCallbacks {
 	onDelta: (delta: string) => void;
@@ -48,7 +44,6 @@ export interface StreamCallbacks {
 	onError: (error: string) => void;
 	onAbort: () => void;
 }
-
 // 检测是否在 Tauri 环境中
 async function isTauriEnv(): Promise<boolean> {
 	try {
@@ -60,7 +55,6 @@ async function isTauriEnv(): Promise<boolean> {
 		return false;
 	}
 }
-
 /**
  * Agent API 服务
  */
@@ -108,35 +102,14 @@ export class AgentAPI {
 	}
 
 	/**
-	 * 重置 sidecar 状态（用于重新连接）
-	 */
-	resetSidecar(): void {
-		this.sidecarStarted = false;
-	}
-
-	/**
-	 * 检查 Gateway 健康状态
+	 * 健康检查
 	 */
 	async healthCheck(): Promise<boolean> {
-		const isTauri = await isTauriEnv();
-		console.log('[nanobot] Starting health check, isTauriEnv:', isTauri, 'sidecarStarted:', this.sidecarStarted);
 		try {
-			// 在 Tauri 环境中，确保 sidecar 正在运行
-			if (isTauri && !this.sidecarStarted) {
-				try {
-					const port = await ensureSidecarRunning();
-					this.sidecarStarted = true;
-					const apiBase = `http://localhost:${port}`;
-					console.log('[nanobot] Health check using sidecar URL:', apiBase);
-					const response = await fetch(`${apiBase}/api/health`, {
-						method: 'GET',
-						signal: AbortSignal.timeout(10000),
-					});
-					console.log('[nanobot] Health check response:', response.ok);
-					return response.ok;
-				} catch (e) {
-					console.error('[nanobot] Failed to start sidecar:', e);
-					this.sidecarStarted = false;
+			// 检查 sidecar 是否在运行
+			if (await isTauriEnv()) {
+				const port = await getGatewayPort();
+				if (!port) {
 					return false;
 				}
 			}
@@ -188,7 +161,7 @@ export class AgentAPI {
 	}
 
 	/**
-	 * 发送聊天消息（流式响应）
+	 * 发送聊天消息（流式响应)
 	 */
 	async chatStream(request: ChatRequest, callbacks: StreamCallbacks): Promise<void> {
 		const apiBase = await this.getApiBase();
@@ -229,7 +202,7 @@ export class AgentAPI {
 	}
 
 	/**
-	 * 发送聊天消息（非流式响应）
+	 * 发送聊天消息(非流式响应)
 	 */
 	async chat(request: ChatRequest): Promise<ChatResponse> {
 		const apiBase = await this.getApiBase();
@@ -260,11 +233,6 @@ export class AgentAPI {
 		if (this.abortController) {
 			this.abortController.abort();
 		}
-
-		const apiBase = await this.getApiBase();
-		await fetch(`${apiBase}/api/agent/abort`, {
-			method: 'POST',
-		});
 	}
 
 	/**
@@ -297,25 +265,34 @@ export class AgentAPI {
 				for (const line of lines) {
 					// 处理数据事件（普通内容）
 					if (line.startsWith('data: ')) {
-						const data = line.slice(6).trim();
+						const rawData = line.slice(6).trim();
 
-						if (data === '[DONE]') {
+						if (rawData === '[DONE]') {
 							callbacks.onDone();
 							return;
 						}
 
-						if (data === '[ABORTED]') {
+						if (rawData === '[ABORTED]') {
 							callbacks.onAbort();
 							return;
 						}
 
-						if (data.startsWith('[ERROR')) {
-							callbacks.onError(data);
+						if (rawData.startsWith('[ERROR')) {
+							callbacks.onError(rawData);
 							return;
 						}
 
-						// 发送文本增量
-						callbacks.onDelta(data);
+						// JSON 解码内容（后端用 json.dumps 编码）
+						try {
+							const data = JSON.parse(rawData);
+							console.log('[SSE] rawData:', rawData.substring(0, 100));
+							console.log('[SSE] parsed type:', typeof data, 'value type:', typeof data === 'string' ? 'string' : typeof data);
+						 callbacks.onDelta(data);
+						} catch (e) {
+							console.warn('[SSE] JSON parse failed:', e, 'Raw:', rawData.substring(0, 100));
+							// 降级处理：如果 JSON 解析失败，直接使用原始数据
+							callbacks.onDelta(rawData);
+						}
 					}
 
 					// 处理思考过程事件

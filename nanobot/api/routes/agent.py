@@ -7,6 +7,7 @@ This module provides HTTP API endpoints for agent interaction:
 """
 
 import asyncio
+import json
 from typing import Any, AsyncGenerator
 
 from fastapi import APIRouter, HTTPException
@@ -92,6 +93,8 @@ async def _stream_chat(
 
     async def on_stream(delta: str) -> None:
         """Callback to collect streaming content deltas."""
+        if "\n" in delta:
+            print(f"[API] delta has newline: {repr(delta[:80])}")
         await event_queue.put(("data", delta))
 
     async def on_thinking(delta: str) -> None:
@@ -161,11 +164,20 @@ async def _stream_chat(
                         yield f"data: {content}\n\n"
                         break
                 elif event_type == "thinking":
-                    # Thinking content - use "thinking:" event type
-                    yield f"thinking: {content}\n\n"
+                    # Thinking content - use "thinking:" event type, JSON encoded
+                    encoded = json.dumps(content, ensure_ascii=False)
+                    print(
+                        f"[SSE] thinking raw: {repr(content[:50])} -> encoded: {repr(encoded[:60])}"
+                    )
+                    yield f"thinking: {encoded}\n\n"
+                elif event_type == "thinking":
+                    # Thinking content - use "thinking:" event type, JSON encoded
+                    encoded = json.dumps(content, ensure_ascii=False)
+                    yield f"thinking: {encoded}\n\n"
                 else:
-                    # Regular content - use "data:" event type
-                    yield f"data: {content}\n\n"
+                    # Regular content - use "data:" event type, JSON encoded
+                    encoded = json.dumps(content, ensure_ascii=False)
+                    yield f"data: {encoded}\n\n"
 
             except asyncio.TimeoutError:
                 # Check if task was cancelled externally
@@ -178,9 +190,11 @@ async def _stream_chat(
         while not event_queue.empty():
             event_type, content = await event_queue.get()
             if event_type == "thinking":
-                yield f"thinking: {content}\n\n"
+                encoded = json.dumps(content, ensure_ascii=False)
+                yield f"thinking: {encoded}\n\n"
             elif event_type == "data":
-                yield f"data: {content}\n\n"
+                encoded = json.dumps(content, ensure_ascii=False)
+                yield f"data: {encoded}\n\n"
 
     finally:
         if not task.done():

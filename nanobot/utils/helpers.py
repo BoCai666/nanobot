@@ -12,10 +12,13 @@ import tiktoken
 
 
 def strip_think(text: str) -> str:
-    """Remove <think>...</think> blocks and any unclosed trailing <think> tag."""
-    text = re.sub(r"<think>[\s\S]*?</think>", "", text)
-    text = re.sub(r"<think>[\s\S]*$", "", text)
-    return text.strip()
+    """Remove antha...  blocks and any unclosed trailing antha tag.
+
+    Note: Does NOT call .strip() to preserve leading/trailing newlines for streaming.
+    """
+    text = re.sub(r"antha[\s\S]*?<\/antha>", "", text)
+    text = re.sub(r"antha[\s\S]*$", "", text)
+    return text  # 不调用 .strip()，保留换行符
 
 
 class ThinkingStreamParser:

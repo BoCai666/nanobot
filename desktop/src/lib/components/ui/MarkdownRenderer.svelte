@@ -303,30 +303,39 @@
 	 */
 	async function renderMarkdown() {
 		if (!content) {
-			renderedHtml = "";
-			return;
-		}
+		 renderedHtml = "";
+            return;
+        }
 
-		try {
-			// 处理流式 Markdown
-			const sanitizedContent = streaming ? sanitizeStreamingMarkdown(content) : content;
+        try {
+            // 处理流式 Markdown
+            const sanitizedContent = streaming ? sanitizeStreamingMarkdown(content) : content;
 
-			// 解析 Markdown
-			const rawHtml = parseMarkdown(sanitizedContent);
+            // 解析 Markdown
+            const rawHtml = parseMarkdown(sanitizedContent);
 
-			// 高亮代码块
-			let processedHtml = await processCodeBlocks(rawHtml);
+            // 先立即渲染基础 HTML（不含代码高亮）
+            // 这样即使 Shiki 加载失败，用户也能看到格式化的内容
+            renderedHtml = rawHtml;
 
-			// 处理图片（添加包装器和加载状态）
-			processedHtml = processImages(processedHtml);
-
-			renderedHtml = processedHtml;
-		} catch (error) {
-			console.error("Markdown 渲染失败:", error);
-			// 出错时显示原始文本
-			renderedHtml = `<p class="text-error">${escapeHtml(content)}</p>`;
-		}
-	}
+            // 异步高亮代码块（不阻塞渲染）
+            processCodeBlocks(rawHtml)
+                .then((highlightedHtml) => {
+                    const processedHtml = processImages(highlightedHtml);
+                    renderedHtml = processedHtml;
+                })
+                .catch((error) => {
+                    console.warn("代码高亮失败，使用原始 HTML:", error);
+                    // 高亮失败时，至少处理图片
+                    const processedHtml = processImages(rawHtml);
+                    renderedHtml = processedHtml;
+                });
+        } catch (error) {
+            console.error("Markdown 渲染失败:", error);
+            // 出错时显示原始文本
+            renderedHtml = `<p class="text-error">${escapeHtml(content)}</p>`;
+        }
+    }
 
 	/**
 	 * 转义 HTML 特殊字符

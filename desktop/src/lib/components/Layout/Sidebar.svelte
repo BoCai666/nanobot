@@ -85,20 +85,26 @@
 		}
 	}
 
-	// 格式化相对时间
+	// 格式化相对时间 + 具体日期
 	function formatRelativeTime(date: Date): string {
-		const now = new Date();
-		const diff = now.getTime() - date.getTime();
-		const minutes = Math.floor(diff / 60000);
-		const hours = Math.floor(minutes / 60);
-		const days = Math.floor(hours / 24);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-		if (minutes < 1) return '刚刚';
-		if (minutes < 60) return `${minutes}分钟前`;
-		if (hours < 24) return `${hours}小时前`;
-		if (days < 7) return `${days}天前`;
-		return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
-	}
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return `${minutes}分钟前`;
+    if (hours < 24) return `${hours}小时前`;
+    if (days < 7) return `${days}天前`;
+    // 显示具体日期时间（如：3月27日 14:23)
+    return date.toLocaleDateString('zh-CN', { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
 </script>
 
 <aside

@@ -70,11 +70,19 @@ class _LoopHook(AgentHook):
     async def on_stream(self, context: AgentHookContext, delta: str) -> None:
         from nanobot.utils.helpers import strip_think
 
+        # DEBUG: 追踪换行符
+        has_nl = "\n" in delta
+        if has_nl:
+            print(f"[HOOK] delta={repr(delta[:80])}, hasNL=True")
         prev_clean = strip_think(self._stream_buf)
         self._stream_buf += delta
         new_clean = strip_think(self._stream_buf)
-        incremental = new_clean[len(prev_clean):]
+        incremental = new_clean[len(prev_clean) :]
         if incremental and self._on_stream:
+            if "\n" in incremental:
+                print(f"[HOOK] -> incremental HAS newline: {repr(incremental[:80])}")
+            else:
+                print(f"[HOOK] -> incremental NO newline: {repr(incremental[:80])}")
             await self._on_stream(incremental)
 
     async def on_stream_end(self, context: AgentHookContext, *, resuming: bool) -> None:
@@ -338,85 +346,6 @@ class AgentLoop:
         ``resuming=True`` means tool calls follow (spinner should restart);
         ``resuming=False`` means this is the final response.
         """
-<<<<<<< HEAD
-        loop_self = self
-
-        class _LoopHook(AgentHook):
-            def __init__(self) -> None:
-                self._stream_buf = ""
-                self._thinking_parser = None
-                if on_stream is not None or on_thinking is not None:
-                    from nanobot.utils.helpers import ThinkingStreamParser
-
-                    self._thinking_parser = ThinkingStreamParser()
-
-            def wants_streaming(self) -> bool:
-                return on_stream is not None or on_thinking is not None
-
-            async def on_stream(self, context: AgentHookContext, delta: str) -> None:
-                # If no thinking parser, use legacy behavior (strip think blocks)
-                if self._thinking_parser is None:
-                    from nanobot.utils.helpers import strip_think
-
-                    prev_clean = strip_think(self._stream_buf)
-                    self._stream_buf += delta
-                    new_clean = strip_think(self._stream_buf)
-                    incremental = new_clean[len(prev_clean) :]
-                    if incremental and on_stream:
-                        await on_stream(incremental)
-                else:
-                    # Use ThinkingStreamParser for incremental parsing
-                    thinking_delta, content_delta = self._thinking_parser.parse(delta)
-                    if thinking_delta and on_thinking:
-                        await on_thinking(thinking_delta)
-                    if content_delta and on_stream:
-                        await on_stream(content_delta)
-
-            async def on_thinking(self, context: AgentHookContext, thinking: str) -> None:
-                """Handle thinking content from provider-level reasoning."""
-                if on_thinking:
-                    await on_thinking(thinking)
-
-            async def on_stream_end(self, context: AgentHookContext, *, resuming: bool) -> None:
-                if on_stream_end:
-                    await on_stream_end(resuming=resuming)
-                self._stream_buf = ""
-                if self._thinking_parser:
-                    self._thinking_parser.reset()
-
-            async def before_execute_tools(self, context: AgentHookContext) -> None:
-                if on_progress:
-                    if not on_stream:
-                        thought = loop_self._strip_think(
-                            context.response.content if context.response else None
-                        )
-                        if thought:
-                            await on_progress(thought)
-                    tool_hint = loop_self._strip_think(loop_self._tool_hint(context.tool_calls))
-                    await on_progress(tool_hint, tool_hint=True)
-                for tc in context.tool_calls:
-                    args_str = json.dumps(tc.arguments, ensure_ascii=False)
-                    logger.info("Tool call: {}({})", tc.name, args_str[:200])
-                loop_self._set_tool_context(channel, chat_id, message_id)
-
-            def finalize_content(
-                self, context: AgentHookContext, content: str | None
-            ) -> str | None:
-                return loop_self._strip_think(content)
-
-        result = await self.runner.run(
-            AgentRunSpec(
-                initial_messages=initial_messages,
-                tools=self.tools,
-                model=self.model,
-                max_iterations=self.max_iterations,
-                reasoning_effort=self.reasoning_effort,
-                hook=_LoopHook(),
-                error_message="Sorry, I encountered an error calling the AI model.",
-                concurrent_tools=True,
-            )
-        )
-=======
         loop_hook = _LoopHook(
             self,
             on_progress=on_progress,
@@ -427,21 +356,21 @@ class AgentLoop:
             message_id=message_id,
         )
         hook: AgentHook = (
-            _LoopHookChain(loop_hook, self._extra_hooks)
-            if self._extra_hooks
-            else loop_hook
+            _LoopHookChain(loop_hook, self._extra_hooks) if self._extra_hooks else loop_hook
         )
 
-        result = await self.runner.run(AgentRunSpec(
-            initial_messages=initial_messages,
-            tools=self.tools,
-            model=self.model,
-            max_iterations=self.max_iterations,
-            hook=hook,
-            error_message="Sorry, I encountered an error calling the AI model.",
-            concurrent_tools=True,
-        ))
->>>>>>> upstream/main
+        result = await self.runner.run(
+            AgentRunSpec(
+                initial_messages=initial_messages,
+                tools=self.tools,
+                model=self.model,
+                max_iterations=self.max_iterations,
+                reasoning_effort=self.reasoning_effort,
+                hook=hook,
+                error_message="Sorry, I encountered an error calling the AI model.",
+                concurrent_tools=True,
+            )
+        )
         self._last_usage = result.usage
         if result.stop_reason == "max_iterations":
             logger.warning("Max iterations ({}) reached", self.max_iterations)
@@ -503,42 +432,17 @@ class AgentLoop:
                         return f"{stream_base_id}:{stream_segment}"
 
                     async def on_stream(delta: str) -> None:
-<<<<<<< HEAD
+                        meta = dict(msg.metadata or {})
+                        meta["_stream_delta"] = True
+                        meta["_stream_id"] = _current_stream_id()
                         await self.bus.publish_outbound(
                             OutboundMessage(
                                 channel=msg.channel,
                                 chat_id=msg.chat_id,
                                 content=delta,
-                                metadata={
-                                    "_stream_delta": True,
-                                    "_stream_id": _current_stream_id(),
-                                },
+                                metadata=meta,
                             )
                         )
-
-                    async def on_stream_end(*, resuming: bool = False) -> None:
-                        nonlocal stream_segment
-                        await self.bus.publish_outbound(
-                            OutboundMessage(
-                                channel=msg.channel,
-                                chat_id=msg.chat_id,
-                                content="",
-                                metadata={
-                                    "_stream_end": True,
-                                    "_resuming": resuming,
-                                    "_stream_id": _current_stream_id(),
-                                },
-                            )
-                        )
-=======
-                        meta = dict(msg.metadata or {})
-                        meta["_stream_delta"] = True
-                        meta["_stream_id"] = _current_stream_id()
-                        await self.bus.publish_outbound(OutboundMessage(
-                            channel=msg.channel, chat_id=msg.chat_id,
-                            content=delta,
-                            metadata=meta,
-                        ))
 
                     async def on_stream_end(*, resuming: bool = False) -> None:
                         nonlocal stream_segment
@@ -546,12 +450,14 @@ class AgentLoop:
                         meta["_stream_end"] = True
                         meta["_resuming"] = resuming
                         meta["_stream_id"] = _current_stream_id()
-                        await self.bus.publish_outbound(OutboundMessage(
-                            channel=msg.channel, chat_id=msg.chat_id,
-                            content="",
-                            metadata=meta,
-                        ))
->>>>>>> upstream/main
+                        await self.bus.publish_outbound(
+                            OutboundMessage(
+                                channel=msg.channel,
+                                chat_id=msg.chat_id,
+                                content="",
+                                metadata=meta,
+                            )
+                        )
                         stream_segment += 1
 
                 response = await self._process_message(
